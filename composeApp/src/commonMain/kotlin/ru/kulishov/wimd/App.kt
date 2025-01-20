@@ -31,6 +31,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -89,12 +90,17 @@ fun bottomIslandScreen(screen:@Composable () -> Unit, islandContent:@Composable 
         , animationSpec = tween(delayMillis = 300), label = ""
     )
 
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter){
+    Box(Modifier.fillMaxSize().background(primaryColor), contentAlignment = Alignment.BottomCenter){
         //Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.padding(bottom = islandHeight).fillMaxSize()){
                 screen()
             }
-            Box(Modifier.fillMaxWidth().height(islandHeight).background(islandColor, RoundedCornerShape(10,10,0,0))
+            Box(Modifier
+                .clip(RoundedCornerShape(10,10,0,0))
+                .fillMaxWidth()
+                .height(islandHeight)
+
+                .background(islandColor)
                 .pointerInput(Unit){
                     detectVerticalDragGestures { change, dragAmount ->
                         change.consume()
