@@ -98,9 +98,9 @@ fun AppTheme(content:@Composable () -> Unit){
          },
         content=content,
         typography = Typography(
-            titleSmall = TextStyle(
+            titleMedium = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 20.sp
             )
         )
     )

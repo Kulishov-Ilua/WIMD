@@ -2,6 +2,7 @@ package ru.kulishov.wimd
 
 import android.graphics.Color
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -126,13 +127,10 @@ fun NavHostContainer(
                 , contentAlignment = Alignment.TopCenter){
                         var dd by remember { mutableStateOf(true) }
                         Row{
-                            Box(Modifier.padding(end=10.dp)){
-                                NavSingleButtom(dd,{d -> dd=d},"first")
+                            Box(Modifier.padding(top=25.dp)){
+                                NavDoubleButtom(dd,{d -> dd=d},"first","second")
                             }
 
-                            Box(Modifier.padding(start=10.dp)){
-                                NavSingleButtom(!dd,{d -> dd=!d},"second")
-                            }
                         }
                     }
                 },{}, androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.colorScheme.background)
@@ -159,62 +157,63 @@ fun NavHostContainer(
 //=====================================================================================
 @Composable
 fun NavDoubleButtom(startState:Boolean, onButState:(Boolean) -> Unit,first:String,second:String){
-    var navButState by remember { mutableStateOf(startState) }
-    var animateBackground = animateIntOffsetAsState(
-        targetValue = if(navButState) IntOffset(0,0) else IntOffset(75,0)
+    var animateBackground = animateDpAsState(
+        targetValue = if(startState) 0.dp else 120.dp
     )
-    Box(Modifier.width(150.dp).height(30.dp).border(1.dp,androidx.compose.material3.MaterialTheme.colorScheme.primary,
-        RoundedCornerShape(10)
-    ).pointerInput(Unit){
+    Box(Modifier.width(240.dp).pointerInput(Unit){
         detectHorizontalDragGestures{
             change,dragAmount ->
             change.consume()
             if(dragAmount>0){
-                if(navButState==true) navButState = false
+                if(startState==true){
+                    onButState(false)
+                }
             }else{
-                if(navButState==false) navButState = true
+                if(startState==false) {
+                    onButState(true)
+                }
             }
         }
-    }, contentAlignment = Alignment.Center
+    }, contentAlignment = Alignment.CenterStart
     ){
         // Background box that moves
         Box(
             Modifier
-                .fillMaxHeight()
-                .width(75.dp)
+                .padding(start = animateBackground.value)
+                .height(40.dp)
+                .width(120.dp)
                 .background(androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(9.dp)
+                    RoundedCornerShape(10.dp)
                 )
-                .offset { animateBackground.value }
+
         )
-        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically){
-            Box(Modifier.fillMaxHeight().weight(1f)
-                .clickable {
-                    navButState=true
-                    onButState(navButState)
-                }
-                , contentAlignment = Alignment.Center){
+        Row(verticalAlignment = Alignment.CenterVertically){
+            Box(Modifier.width(120.dp).height(40.dp), contentAlignment = Alignment.Center) {
                 Text(first, style = TextStyle(
-                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontWeight,
-                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontSize,
-                    color = if(navButState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
-                ))
+                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontWeight,
+                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontSize,
+                    color = if (startState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
+                ), modifier = Modifier.padding(10.dp).clickable {
+                    if (startState == false) {
+                        onButState(true)
+                    }
+
+                })
+            }
+            Box(Modifier.width(120.dp).height(40.dp), contentAlignment = Alignment.Center) {
+                Text(second, style = TextStyle(
+                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontWeight,
+                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontSize,
+                    color = if (!startState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
+                ), modifier = Modifier.padding(10.dp).clickable {
+                    if (startState == true) {
+                        onButState(false)
+                    }
+
+                })
             }
         }
-        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically){
-            Box(Modifier.fillMaxHeight().weight(1f)
-                .clickable {
-                    navButState=false
-                    onButState(navButState)
-                }
-                , contentAlignment = Alignment.Center){
-                Text(first, style = TextStyle(
-                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontWeight,
-                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontSize,
-                    color = if(!navButState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
-                ))
-            }
-        }
+
     }
 }
 
