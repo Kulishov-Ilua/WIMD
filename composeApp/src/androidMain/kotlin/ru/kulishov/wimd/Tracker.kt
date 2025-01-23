@@ -77,7 +77,8 @@ fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: T
     )
     var timeLabelAlpha = animateFloatAsState(
         targetValue = if(!stateHeight&&!isTrackerRunning) 0f
-        else 1f
+        else 1f,
+        animationSpec = tween(delayMillis = if(stateHeight||isTrackerRunning) delayTimeLabel else 0)
     )
     //--------------------------------------------------------------------------
     // Анимация кнопки стоп если остров узкий:
