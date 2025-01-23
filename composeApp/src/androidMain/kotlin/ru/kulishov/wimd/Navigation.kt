@@ -122,19 +122,8 @@ fun NavHostContainer(
         modifier = Modifier.padding(paddingValues = padding),
         builder = {
             composable("tracker") {
-                bottomIslandScreen({
-                    Box(Modifier.fillMaxSize().background(color = androidx.compose.material3.MaterialTheme.colorScheme.background)
-                , contentAlignment = Alignment.TopCenter){
-                        var dd by remember { mutableStateOf(true) }
-                        Row{
-                            Box(Modifier.padding(top=25.dp)){
-                                NavDoubleButtom(dd,{d -> dd=d},"first","second")
-                            }
-
+                TrackerTestScreen()
                         }
-                    }
-                },{}, androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.colorScheme.background)
-            }
 
             composable("calendar") {                //calendarScreen(navController)
             }

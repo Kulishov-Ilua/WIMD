@@ -66,18 +66,19 @@ fun App() {
 //=====================================================================================
 //bottomIslandScreen
 //Input values:
+//              islandState:Int - islandState
+//              islandStateEdit: (Int)-> Unit
 //              screen:@Composable () -> Unit - screen
 //              islandContent:@Composable () -> Unit - island content
 //              islandColor:Color - islandColor
 //              primaryColor:Color - primaryColor
 //=====================================================================================
 @Composable
-fun bottomIslandScreen(screen:@Composable () -> Unit, islandContent:@Composable () -> Unit, islandColor: Color, primaryColor:Color){
-    var islandState by remember { mutableStateOf(0) }
+fun bottomIslandScreen(islandState:Int,islandStateEdit: (Int)-> Unit, screen:@Composable () -> Unit, islandContent:@Composable () -> Unit, islandColor: Color, primaryColor:Color){
     //анимация размера острова
     val islandHeight by animateDpAsState(
         targetValue = if(islandState==0) 200.dp     //
-        else if(islandState==1) 100.dp              //
+        else if(islandState==1) 150.dp              //
         else if(islandState==2) 350.dp              //
         else if (islandState==3)465.dp              //
         else if (islandState==4)310.dp              //
@@ -105,21 +106,25 @@ fun bottomIslandScreen(screen:@Composable () -> Unit, islandContent:@Composable 
                     detectVerticalDragGestures { change, dragAmount ->
                         change.consume()
                         if(dragAmount>0){
-                            if(islandState==0) islandState = 1
+                            if(islandState==0) islandStateEdit(1)
                         }else{
-                            islandState = 0
+                            islandStateEdit(0)
                         }
                     }
                 }, contentAlignment = Alignment.TopCenter){
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
                         tint = primaryColor,
-                        modifier = Modifier.padding(top=15.dp, bottom = 15.dp).rotate(rotateAnimate)
+                        modifier = Modifier.padding(top=15.dp).rotate(rotateAnimate)
                             .clickable {
-                                if (islandState == 0) islandState = 1
+                                if (islandState == 0)  islandStateEdit(1)
                                 else
-                                    islandState = 0
+                                    islandStateEdit(0)
                             })
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+                        islandContent()
+                    }
+
                 }
             }
         //}
