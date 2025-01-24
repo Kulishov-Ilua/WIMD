@@ -111,7 +111,8 @@ class MainActivity : ComponentActivity() {
                             BottomNavigationBar(navController)
                         },
                         content = {
-                                padding -> NavHostContainer(navController,padding)
+                                padding -> NavHostContainer(navController,padding, listTask.value,
+                            listGroup)
                         }
                     )
                 }

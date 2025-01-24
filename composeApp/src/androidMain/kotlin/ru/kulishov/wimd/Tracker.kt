@@ -54,9 +54,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 //              typographyLabel:TextStyle - typographyLabel
 //              buttonLabel:TextStyle - buttonLabel
 //              stateHeight:Boolean - tracker height state
+//              onCreate:()->Unit - button create unit
 //=====================================================================================
 @Composable
-fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: TextStyle, buttonLabel: TextStyle, stateHeight:Boolean){
+fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: TextStyle, buttonLabel: TextStyle, stateHeight:Boolean,onCreate:()->Unit){
 
     var currentTime by remember { mutableStateOf(0L) }
     var timerStartTime = remember { mutableStateOf(0L) }
@@ -98,7 +99,7 @@ fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: T
     //-------------------------------------------------------------------------
     val delayButtonDown = 300 //задержка на ожидание исчезновение 2 кнопки в нижнем ряду
     var stopButtonAlpha = animateFloatAsState(
-        targetValue = if(!isTrackerRunning|| isTrackerRunning&&stateHeight) 1f
+        targetValue = if(!isTrackerRunning || isTrackerRunning&&stateHeight) 1f
         else 0f
     )
     var stopButtonWidth = animateDpAsState(
@@ -169,10 +170,12 @@ fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: T
                 }
 
             }
-            if(stateHeight||!stateHeight&&!isTrackerRunning){
+            if(!isTrackerRunning){
                 Row(modifier = Modifier.padding(top=if(stateHeight)30.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
                     if(createButtonAlpha.value>0f){
-                        Button(onClick ={},
+                        Button(onClick ={
+                            onCreate()
+                        },
                             shape = RoundedCornerShape(10),
                             modifier = Modifier.padding(end = 15.dp).width(150.dp).height(50.dp).alpha(createButtonAlpha.value)
                            , colors = ButtonColors(primaryColor,backgroundColor,primaryColor,backgroundColor)
@@ -227,25 +230,39 @@ fun timeconverter(time:Long,styleLabel: TextStyle){
     )
 }
 
-@Preview
+//=====================================================================================
+//taskGroupScreen
+//Input values:
+//              listTask:List<Task> -
+//              listGroupTask: List<GroupTask> -
+//=====================================================================================
 @Composable
-fun TrackerTestScreen(){
+fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>){
+    //--------------------------------------------------------------
+    //Состояния экрана трекера:
+    //      0 -> Блок трекера, списки задач и групп
+    //--------------------------------------------------------------
     var stateTrackerApp by remember { mutableStateOf(0) }
     bottomIslandScreen(stateTrackerApp,{di-> stateTrackerApp=di},{
         Box(Modifier.fillMaxSize().background(color = androidx.compose.material3.MaterialTheme.colorScheme.background)
             , contentAlignment = Alignment.TopCenter){
-            var dd by remember { mutableStateOf(true) }
-
-            Row{
                 Box(Modifier.padding(top=25.dp)){
-                    NavDoubleButtom(dd,{d -> dd=d},"first","second")
+                    taskGroupScreen(
+                        listTask, listGroupTask,{},{},MaterialTheme.colorScheme.primary,MaterialTheme.colorScheme.background,
+                        MaterialTheme.typography.titleMedium,MaterialTheme.typography.bodyMedium)
                 }
 
-            }
+
         }
     },{
-        TrackerBlock(androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.colorScheme.background,
-            androidx.compose.material3.MaterialTheme.typography.titleLarge,androidx.compose.material3.MaterialTheme.typography.titleMedium,stateTrackerApp==0)
+        when(stateTrackerApp){
+            0,1 ->  TrackerBlock(androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.colorScheme.background,
+                androidx.compose.material3.MaterialTheme.typography.titleLarge,androidx.compose.material3.MaterialTheme.typography.titleMedium,stateTrackerApp==0,{
+                    stateTrackerApp=2
+                })
+            2 -> chooseCreateBlock({},{}, MaterialTheme.typography.titleLarge,MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.primary)
+
+        }
 
     }, androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.colorScheme.background)
 

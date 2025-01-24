@@ -114,7 +114,8 @@ fun BottomNavigationBar(navController: NavController) {
 
 @Composable
 fun NavHostContainer(
-    navController: NavHostController, padding: PaddingValues
+    navController: NavHostController, padding: PaddingValues,
+    listTask:List<Task>, listGroupTask: List<GroupTask>
 ) {
     NavHost(
         navController = navController,
@@ -122,7 +123,7 @@ fun NavHostContainer(
         modifier = Modifier.padding(paddingValues = padding),
         builder = {
             composable("tracker") {
-                TrackerTestScreen()
+                TrackerScreen(listTask,listGroupTask)
                         }
 
             composable("calendar") {                //calendarScreen(navController)
@@ -136,75 +137,7 @@ fun NavHostContainer(
     )
 }
 
-//=====================================================================================
-//NavDoubleButtom
-//Input values:
-//              startState:Boolean
-//              onButState:() -> Unit
-//              first:String - first element
-//              second:String - second element
-//=====================================================================================
-@Composable
-fun NavDoubleButtom(startState:Boolean, onButState:(Boolean) -> Unit,first:String,second:String){
-    var animateBackground = animateDpAsState(
-        targetValue = if(startState) 0.dp else 120.dp
-    )
-    Box(Modifier.width(240.dp).pointerInput(Unit){
-        detectHorizontalDragGestures{
-            change,dragAmount ->
-            change.consume()
-            if(dragAmount>0){
-                if(startState==true){
-                    onButState(false)
-                }
-            }else{
-                if(startState==false) {
-                    onButState(true)
-                }
-            }
-        }
-    }, contentAlignment = Alignment.CenterStart
-    ){
-        // Background box that moves
-        Box(
-            Modifier
-                .padding(start = animateBackground.value)
-                .height(40.dp)
-                .width(120.dp)
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(10.dp)
-                )
 
-        )
-        Row(verticalAlignment = Alignment.CenterVertically){
-            Box(Modifier.width(120.dp).height(40.dp), contentAlignment = Alignment.Center) {
-                Text(first, style = TextStyle(
-                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontWeight,
-                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontSize,
-                    color = if (startState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
-                ), modifier = Modifier.padding(10.dp).clickable {
-                    if (startState == false) {
-                        onButState(true)
-                    }
-
-                })
-            }
-            Box(Modifier.width(120.dp).height(40.dp), contentAlignment = Alignment.Center) {
-                Text(second, style = TextStyle(
-                    fontWeight = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontWeight,
-                    fontSize = androidx.compose.material3.MaterialTheme.typography.titleMedium.fontSize,
-                    color = if (!startState) androidx.compose.material3.MaterialTheme.colorScheme.background else androidx.compose.material3.MaterialTheme.colorScheme.primary
-                ), modifier = Modifier.padding(10.dp).clickable {
-                    if (startState == true) {
-                        onButState(false)
-                    }
-
-                })
-            }
-        }
-
-    }
-}
 
 //=====================================================================================
 //NavSingleButtom
