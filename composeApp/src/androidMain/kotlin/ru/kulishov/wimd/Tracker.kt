@@ -240,9 +240,12 @@ fun timeconverter(time:Long,styleLabel: TextStyle){
 fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>){
     //--------------------------------------------------------------
     //Состояния экрана трекера:
-    //      0 -> Блок трекера, списки задач и групп
+    //      0,1 -> Блок трекера, списки задач и групп
+    //      2 -> Блок выбора создания, списки задач и групп
+    //      3 -> Блок создания задачи
     //--------------------------------------------------------------
     var stateTrackerApp by remember { mutableStateOf(0) }
+    var taskTransfer by remember { mutableStateOf(Task(null,"",0L,0L, -1)) }
     bottomIslandScreen(stateTrackerApp,{di-> stateTrackerApp=di},{
         Box(Modifier.fillMaxSize().background(color = androidx.compose.material3.MaterialTheme.colorScheme.background)
             , contentAlignment = Alignment.TopCenter){
@@ -260,8 +263,9 @@ fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>){
                 androidx.compose.material3.MaterialTheme.typography.titleLarge,androidx.compose.material3.MaterialTheme.typography.titleMedium,stateTrackerApp==0,{
                     stateTrackerApp=2
                 })
-            2 -> chooseCreateBlock({},{}, MaterialTheme.typography.titleLarge,MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.primary)
-
+            2 -> chooseCreateBlock({},{stateTrackerApp=3}, MaterialTheme.typography.titleLarge,MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.primary)
+            3 -> createTaskBlock(taskTransfer,{},{},{ return@createTaskBlock 0L },{ return@createTaskBlock 0L },androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                androidx.compose.material3.MaterialTheme.typography.titleMedium)
         }
 
     }, androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.colorScheme.background)

@@ -47,7 +47,7 @@ data class GroupTask(
 @Entity
 data class Task(
     @PrimaryKey(autoGenerate = true) val uid: Long?=null,
-    @ColumnInfo(name = "name") val name: String?,
+    @ColumnInfo(name = "name") var name: String?,
     @ColumnInfo(name = "start") val start: Long,
     @ColumnInfo(name = "end") val end: Long,
     @ColumnInfo(name = "groupID") val groupID: Int,

@@ -48,6 +48,8 @@ kotlin {
             implementation(libs.androidx.room.runtime)
             implementation(libs.sqlite.bundled)
             implementation(libs.sqlite)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+
         }
     }
 }

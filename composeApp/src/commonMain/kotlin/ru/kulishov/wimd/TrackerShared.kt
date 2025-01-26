@@ -1,6 +1,11 @@
 package ru.kulishov.wimd
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -30,12 +39,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import wimd.composeapp.generated.resources.Res
+import wimd.composeapp.generated.resources.ok
+import wimd.composeapp.generated.resources.vector
 
 //##################################################################################################
 //##################################################################################################
@@ -92,6 +110,356 @@ fun chooseCreateBlock(onGroup:() -> Unit,onTask:() -> Unit, titleStyle: TextStyl
         }
     }
 }
+
+//=====================================================================================
+//createTaskBlock
+//Input values:
+//              task:Task - task
+//              onSave: () -> Unit -
+//              onBack: () -> Unit -
+//              onDate:(Long) -> Long
+//              onTime:(Long) ->Long
+//              primaryColor:Color -
+//              backgroundColor:Color -
+//              titleStyle:TextStyle -
+//              bodyStyle:TextStyle -
+//=====================================================================================
+@Preview
+@Composable
+fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onDate:(Long) -> Long,onTime:(Long) ->Long,primaryColor:Color,backgroundColor:Color, titleStyle: TextStyle,bodyStyle: TextStyle){
+    var newTask by remember { mutableStateOf(task) }
+    var newName by remember { mutableStateOf(task.name!!) }
+    var newStart by remember { mutableStateOf(task.start) }
+    var newEnd by remember { mutableStateOf(task.end) }
+    var newGroup by remember { mutableStateOf(task.groupID) }
+    var newStartFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
+    var newEndFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
+
+    //Флаг открытия окна групп
+    var groupFlag by remember { mutableStateOf(false) }
+
+    val textfieldStyle = TextFieldDefaults.textFieldColors(
+        backgroundColor = Color.Transparent,
+        textColor = primaryColor,
+        disabledTextColor = primaryColor,
+        cursorColor = primaryColor,
+        unfocusedLabelColor = primaryColor,
+        focusedLabelColor = primaryColor,
+        disabledLabelColor = primaryColor,
+        )
+    val titleTextStyle = TextStyle(
+        fontWeight = titleStyle.fontWeight,
+        fontSize = titleStyle.fontSize,
+        color = primaryColor
+    )
+    val textfieldTextStyle = TextStyle(
+        fontWeight = bodyStyle.fontWeight,
+        fontSize = bodyStyle.fontSize,
+        color = primaryColor
+    )
+
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter){
+        Column(horizontalAlignment = Alignment.CenterHorizontally){
+            Text(text = if(task.uid==null) "Создать задачу" else "Редактировать задачу", style = titleTextStyle, modifier = Modifier.padding(bottom = 25.dp)
+            )
+            LazyColumn( horizontalAlignment = Alignment.CenterHorizontally) {
+                item{
+                    TextField(value = newName,
+                        onValueChange ={newName = it},
+                        label = {
+                            Text(text = "Название", style = textfieldTextStyle
+                            )
+                        },
+                        textStyle = bodyStyle,
+                        singleLine = true,
+                        colors = textfieldStyle
+                    )
+                    Box(
+                        Modifier
+                            .width(300.dp)
+                            .height(2.dp)
+                            .background(primaryColor))
+                    Text(
+                        text = "C",
+                        style = titleTextStyle,
+                        modifier = Modifier.padding(top=25.dp)
+                    )
+                    Row(Modifier.padding(top=5.dp), verticalAlignment = Alignment.CenterVertically){
+                        Box(
+                            Modifier
+                                .padding(end = 15.dp)
+                                .width(135.dp)
+                                .height(50.dp)
+                                .clickable { newStart = onDate(newStart)
+                                           newStartFormated.convertUnixTimeToDate1(newStart)},
+                            contentAlignment = Alignment.Center){
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (newStart > 0L) "${newStartFormated.day}/${newStartFormated.month}/${newStartFormated.year}" else "Дата",
+                                    style = textfieldTextStyle
+                                )
+                                Box(
+                                    Modifier
+                                        .width(135.dp)
+                                        .height(2.dp)
+                                        .background(primaryColor))
+                            }
+                        }
+                        Box(
+                            Modifier
+                                .padding(start = 15.dp)
+                                .width(135.dp)
+                                .height(50.dp)
+                                .clickable { newStart = onTime(newStart)
+                                           newStartFormated.convertUnixTimeToDate1(newStart)},
+                            contentAlignment = Alignment.Center){
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (newStart>0L) "${newStartFormated.hour}:${newStartFormated.minute}" else "Время",
+                                    style = textfieldTextStyle
+                                )
+                                Box(
+                                    Modifier
+                                        .width(135.dp)
+                                        .height(2.dp)
+                                        .background(primaryColor))
+                            }
+                        }
+                    }
+                    Text(
+                        text = "По",
+                        style =titleTextStyle,
+                        modifier = Modifier.padding(top=25.dp)
+                    )
+                    Row(Modifier.padding(top=5.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier
+                                .padding(end = 15.dp)
+                                .width(135.dp)
+                                .height(50.dp)
+                                .clickable {
+                                    newEnd = onDate(newEnd)
+                                    newEndFormated.convertUnixTimeToDate1(newEnd)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (newEnd > 0L) "${newEndFormated.day}/${newEndFormated.month}/${newEndFormated.year}" else "Дата",
+                                    style = textfieldTextStyle
+                                )
+                                Box(
+                                    Modifier
+                                        .width(135.dp)
+                                        .height(2.dp)
+                                        .background(primaryColor)
+                                )
+                            }
+                        }
+                        Box(
+                            Modifier
+                                .padding(start = 15.dp)
+                                .width(135.dp)
+                                .height(50.dp)
+                                .clickable {
+                                    newEnd = onTime(newEnd)
+                                    newEndFormated.convertUnixTimeToDate1(newEnd)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (newEnd > 0L) "${newEndFormated.hour}:${newEndFormated.minute}" else "Время",
+                                    style = textfieldTextStyle
+                                )
+                                Box(
+                                    Modifier
+                                        .width(135.dp)
+                                        .height(2.dp)
+                                        .background(primaryColor)
+                                )
+                            }
+                        }
+                    }
+                        val animateRotateColorVectorGroup by animateFloatAsState(targetValue =
+                        if(groupFlag==false) 0f else 180f,
+                            animationSpec = tween(durationMillis = 400)
+                        )
+                        //анимация подчеркивания в палитре  групп
+                        val animateBorderColorGroup by animateDpAsState(targetValue =
+                        if(!groupFlag) 300.dp else 250.dp,
+                            animationSpec = tween(durationMillis = 400)
+                        )
+                        //анимация изменения бокса групп
+                        val animateGroupBox by animateDpAsState(targetValue = if (!groupFlag) 50.dp else 210.dp
+                            , animationSpec = tween(durationMillis = 400)
+                        )
+                        Box(modifier = Modifier
+                            .padding(top = 25.dp)
+                            .width(300.dp)
+                            .height(animateGroupBox)
+                            .border(
+                                width = if (groupFlag == true) 2.dp else 0.dp,
+                                color = if (groupFlag == true) primaryColor else backgroundColor,
+                                shape = RoundedCornerShape(4)
+                            ), contentAlignment = Alignment.TopCenter){
+                            Column {
+                                Box(
+                                    Modifier
+                                        .height(50.dp)
+                                        .clickable {
+                                            if (groupFlag) groupFlag = false else groupFlag = true
+                                        }, contentAlignment = Alignment.Center){
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Row(modifier = Modifier
+                                            .padding(start = 25.dp, end = 25.dp)
+                                            .height(48.dp)
+                                            , verticalAlignment = Alignment.CenterVertically){
+                                            (if(newGroup<0) "Группа" else listGroup[newGroup].name)?.let {
+                                                Text(text = it, style = textfieldTextStyle)
+                                            }
+
+                                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd){
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(start = 15.dp)
+                                                        .width(25.dp)
+                                                        .height(25.dp)
+                                                        .background(
+                                                            if (newGroup >= 0) parseColor(
+                                                                listGroup[newGroup ].color
+                                                            ) else backgroundColor,
+                                                            shape = RoundedCornerShape(4)
+                                                        ), contentAlignment = Alignment.Center
+                                                ){
+                                                    Icon(painter = painterResource(Res.drawable.vector),
+                                                        tint = primaryColor
+                                                        , contentDescription ="",
+                                                        modifier = Modifier
+                                                            .scale(0.7f)
+                                                            .rotate(animateRotateColorVectorGroup))
+                                                }
+
+                                            }
+                                        }
+
+                                        Box(
+                                            Modifier
+                                                .width(animateBorderColorGroup)
+                                                .height(2.dp)
+                                                .background(primaryColor))
+                                    }
+
+                                }
+                                if(groupFlag){
+                                    LazyColumn(Modifier.height(160.dp)) {
+                                        items(listGroup){
+                                                group-> Box(
+                                            Modifier
+                                                .height(50.dp)
+                                                .clickable {
+                                                    if (newGroup == group.uid) {
+                                                        newGroup = -1
+                                                    } else {
+                                                        newGroup = group.uid!!
+                                                    }
+                                                    groupFlag = false
+                                                }, contentAlignment = Alignment.Center){
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Row(modifier = Modifier
+                                                    .padding(start = 25.dp, end = 25.dp)
+                                                    .height(48.dp)
+                                                    , verticalAlignment = Alignment.CenterVertically){
+                                                    group.name?.let {
+                                                        Text(text = it, style = TextStyle(
+                                                            fontSize = 20.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = primaryColor
+                                                        ))
+                                                    }
+                                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd){
+                                                        Box(
+                                                            Modifier
+                                                                .width(25.dp)
+                                                                .height(25.dp)
+                                                                .background(
+                                                                    parseColor(group.color),
+                                                                    shape = RoundedCornerShape(4)
+                                                                ),
+                                                            contentAlignment = Alignment.Center){
+                                                            if(newGroup==group.uid){
+                                                                Icon(painter = painterResource(Res.drawable.ok),
+                                                                    contentDescription = "",
+                                                                    tint = primaryColor)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                Box(
+                                                    Modifier
+                                                        .width(animateBorderColorGroup)
+                                                        .height(2.dp)
+                                                        .background(primaryColor))
+                                            }
+
+                                        }
+
+                                        }
+                                    }
+                                }
+
+
+
+                            }
+
+                        }
+                    Row(Modifier.padding(top=25.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            Modifier
+                                .padding(end = 10.dp)
+                                .width(140.dp)
+                                .height(50.dp)
+                                .background(
+                                    primaryColor,
+                                    shape = RoundedCornerShape(10)
+                                )
+                                .clickable {
+                                    newTask= Task(task.uid,newName,newStart,newEnd,newGroup)
+                                    onBack(newTask)
+                                },
+                            contentAlignment = Alignment.Center){
+                            Text(text = "Удалить", style = titleStyle)
+
+                        }
+                        Box(
+                            Modifier
+                                .padding(start = 10.dp)
+                                .width(140.dp)
+                                .height(50.dp)
+                                .background(
+                                    primaryColor,
+                                    shape = RoundedCornerShape(10)
+                                )
+                                .clickable {
+                                    if (newName != "" && newStart != 0L && newEnd != 0L && newGroup > 0) {
+                                        newTask= Task(task.uid,newName,newStart,newEnd,newGroup)
+                                        onSave(newTask)
+                                    }
+                                },
+                            contentAlignment = Alignment.Center){
+                            Text(text = "Сохранить", style = titleStyle)
+
+                        }
+                    }
+
+
+                }
+
+            }
+        }
+    }
+}
+
 
 //=====================================================================================
 //taskGroupScreen

@@ -80,7 +80,7 @@ fun bottomIslandScreen(islandState:Int,islandStateEdit: (Int)-> Unit, screen:@Co
         targetValue = if(islandState==0) 200.dp     //
         else if(islandState==1) 125.dp              //
         else if(islandState==2) 350.dp              //
-        else if (islandState==3)465.dp              //
+        else if (islandState==3)600.dp              //
         else if (islandState==4)310.dp              //
         else if (islandState==5)480.dp              //
         else 625.dp,                                //
