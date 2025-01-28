@@ -1,4 +1,13 @@
 package ru.kulishov.wimd
+//##################################################################################################
+//##################################################################################################
+//#####################                 WIMD - TrackerShared                 #######################
+//##################################################################################################
+//####  Author:Kulishov I.V.                         ###############################################
+//####  Version:0.1.0                                ###############################################
+//####  Date:27.01.2025                              ###############################################
+//##################################################################################################
+//##################################################################################################
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,14 +29,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -38,7 +44,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -48,22 +53,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import wimd.composeapp.generated.resources.Res
 import wimd.composeapp.generated.resources.ok
 import wimd.composeapp.generated.resources.vector
 
-//##################################################################################################
-//##################################################################################################
-//#####################                 WIMD - TrackerShared                 #######################
-//##################################################################################################
-//####  Author:Kulishov I.V.                         ###############################################
-//####  Version:0.1.0                                ###############################################
-//####  Date:24.01.2025                              ###############################################
-//##################################################################################################
-//##################################################################################################
 
 //=====================================================================================
 //chooseCreateBlock
@@ -117,8 +112,6 @@ fun chooseCreateBlock(onGroup:() -> Unit,onTask:() -> Unit, titleStyle: TextStyl
 //              task:Task - task
 //              onSave: () -> Unit -
 //              onBack: () -> Unit -
-//              onDate:(Long) -> Long
-//              onTime:(Long) ->Long
 //              primaryColor:Color -
 //              backgroundColor:Color -
 //              titleStyle:TextStyle -
@@ -126,7 +119,7 @@ fun chooseCreateBlock(onGroup:() -> Unit,onTask:() -> Unit, titleStyle: TextStyl
 //=====================================================================================
 @Preview
 @Composable
-fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onDate:(Long) -> Long,onTime:(Long) ->Long,primaryColor:Color,backgroundColor:Color, titleStyle: TextStyle,bodyStyle: TextStyle){
+fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,primaryColor:Color,backgroundColor:Color, titleStyle: TextStyle,bodyStyle: TextStyle){
     var newTask by remember { mutableStateOf(task) }
     var newName by remember { mutableStateOf(task.name!!) }
     var newStart by remember { mutableStateOf(task.start) }
@@ -134,7 +127,16 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
     var newGroup by remember { mutableStateOf(task.groupID) }
     var newStartFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
     var newEndFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
+    newStartFormated.convertUnixTimeToDate1(newStart)
+    newEndFormated.convertUnixTimeToDate1(newEnd)
 
+    //--------------------------------------------------------------
+    //Состояния окон даты и времени:
+    //      0 -> закрыты
+    //      1 -> Окно выбора даты (Старт)
+    //      2 -> Окно выбора времени (Старт)
+    //--------------------------------------------------------------
+    var pickersState by remember { mutableStateOf(0) }
     //Флаг открытия окна групп
     var groupFlag by remember { mutableStateOf(false) }
 
@@ -146,6 +148,8 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
         unfocusedLabelColor = primaryColor,
         focusedLabelColor = primaryColor,
         disabledLabelColor = primaryColor,
+        focusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent
         )
     val titleTextStyle = TextStyle(
         fontWeight = titleStyle.fontWeight,
@@ -190,8 +194,9 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                 .padding(end = 15.dp)
                                 .width(135.dp)
                                 .height(50.dp)
-                                .clickable { newStart = onDate(newStart)
-                                           newStartFormated.convertUnixTimeToDate1(newStart)},
+                                .clickable {
+                                    pickersState=1
+                                    },
                             contentAlignment = Alignment.Center){
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
@@ -210,8 +215,9 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                 .padding(start = 15.dp)
                                 .width(135.dp)
                                 .height(50.dp)
-                                .clickable { newStart = onTime(newStart)
-                                           newStartFormated.convertUnixTimeToDate1(newStart)},
+                                .clickable {
+                                    pickersState=2
+                                },
                             contentAlignment = Alignment.Center){
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
@@ -238,8 +244,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                 .width(135.dp)
                                 .height(50.dp)
                                 .clickable {
-                                    newEnd = onDate(newEnd)
-                                    newEndFormated.convertUnixTimeToDate1(newEnd)
+                                    pickersState=3
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -262,8 +267,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                 .width(135.dp)
                                 .height(50.dp)
                                 .clickable {
-                                    newEnd = onTime(newEnd)
-                                    newEndFormated.convertUnixTimeToDate1(newEnd)
+                                    pickersState=4
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -315,7 +319,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                             .padding(start = 25.dp, end = 25.dp)
                                             .height(48.dp)
                                             , verticalAlignment = Alignment.CenterVertically){
-                                            (if(newGroup<0) "Группа" else listGroup[newGroup].name)?.let {
+                                            (if(newGroup<0) "Группа" else listGroup.value[newGroup].name)?.let {
                                                 Text(text = it, style = textfieldTextStyle)
                                             }
 
@@ -327,7 +331,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                                         .height(25.dp)
                                                         .background(
                                                             if (newGroup >= 0) parseColor(
-                                                                listGroup[newGroup ].color
+                                                                listGroup.value[newGroup].color
                                                             ) else backgroundColor,
                                                             shape = RoundedCornerShape(4)
                                                         ), contentAlignment = Alignment.Center
@@ -353,7 +357,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                 }
                                 if(groupFlag){
                                     LazyColumn(Modifier.height(160.dp)) {
-                                        items(listGroup){
+                                        items(listGroup.value){
                                                 group-> Box(
                                             Modifier
                                                 .height(50.dp)
@@ -413,6 +417,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                             }
 
                         }
+
                     Row(Modifier.padding(top=25.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             Modifier
@@ -428,7 +433,12 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                     onBack(newTask)
                                 },
                             contentAlignment = Alignment.Center){
-                            Text(text = "Удалить", style = titleStyle)
+                            Text(text = "Удалить", style = TextStyle(
+                                fontSize = titleTextStyle.fontSize,
+                                fontWeight = titleTextStyle.fontWeight,
+                                fontFamily = titleTextStyle.fontFamily,
+                                color = backgroundColor
+                            ))
 
                         }
                         Box(
@@ -441,13 +451,18 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
                                     shape = RoundedCornerShape(10)
                                 )
                                 .clickable {
-                                    if (newName != "" && newStart != 0L && newEnd != 0L && newGroup > 0) {
+                                    if (newName != "" && newStart != 0L && newEnd != 0L && newGroup > -1) {
                                         newTask= Task(task.uid,newName,newStart,newEnd,newGroup)
                                         onSave(newTask)
                                     }
                                 },
                             contentAlignment = Alignment.Center){
-                            Text(text = "Сохранить", style = titleStyle)
+                            Text(text = "Сохранить", style = TextStyle(
+                                fontSize = titleTextStyle.fontSize,
+                                fontWeight = titleTextStyle.fontWeight,
+                                fontFamily = titleTextStyle.fontFamily,
+                                color = backgroundColor
+                            ))
 
                         }
                     }
@@ -455,6 +470,309 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
 
                 }
 
+            }
+        }
+    }
+    if(pickersState>0){
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+            when(pickersState){
+                1-> DatePickerShared({ date->newStart=date!! },{pickersState=0})
+                2->TimePickerModal({
+                        time->
+                    var timeF = DateAndTimeS(0,0,0,0,0,0)
+                    timeF.convertUnixTimeToDate1(newStart)
+                    timeF.hour=time.hour
+                    timeF.minute=time.minute
+                    timeF.second=0
+                    newStart=timeF.convertToSeconds(timeF)
+                    pickersState=0
+                },{
+                    pickersState=0
+                })
+
+                3-> DatePickerShared({ date->newEnd=date!! },{pickersState=0})
+                4->TimePickerModal({
+                        time->
+                    var timeF = DateAndTimeS(0,0,0,0,0,0)
+                    timeF.convertUnixTimeToDate1(newEnd)
+                    timeF.hour=time.hour
+                    timeF.minute=time.minute
+                    timeF.second=0
+                    newEnd=timeF.convertToSeconds(timeF)
+                    pickersState=0
+                },{
+                    pickersState=0
+                })
+            }
+
+        }
+    }
+}
+
+
+//=====================================================================================
+//createGroupBlock
+//Input values:
+//              group:GroupTask - group
+//              onSave: (GroupTask) -> Unit -
+//              onBack: (GroupTask) -> Unit -
+//              primaryColor:Color -
+//              backgroundColor:Color -
+//              titleStyle:TextStyle -
+//              bodyStyle:TextStyle -
+//=====================================================================================
+
+@Composable
+fun createGroupBlock(group:GroupTask,onSave: (GroupTask) -> Unit, onBack:(GroupTask) -> Unit, primaryColor:Color,backgroundColor:Color, titleStyle: TextStyle,bodyStyle: TextStyle){
+    var newGroup by remember { mutableStateOf(GroupTask(group.uid, group.name,group.color)) }
+    var newNawe by remember { mutableStateOf(group.name!!)  }
+    var newColor by remember{ mutableStateOf(group.color) }
+
+    var colorFlag by remember { mutableStateOf(false) }
+
+    val titleTextStyle = TextStyle(
+        fontSize = titleStyle.fontSize
+        , fontWeight = titleStyle.fontWeight,
+        fontFamily = titleStyle.fontFamily,
+        color = primaryColor
+    )
+    val bodyTextStyle = TextStyle(
+        fontSize = bodyStyle.fontSize,
+        fontFamily = bodyStyle.fontFamily,
+        fontWeight = bodyStyle.fontWeight,
+        color = primaryColor
+    )
+
+    val textfieldStyle = TextFieldDefaults.textFieldColors(
+        backgroundColor = Color.Transparent,
+        textColor = primaryColor,
+        disabledTextColor = primaryColor,
+        cursorColor = primaryColor,
+        unfocusedLabelColor = primaryColor,
+        focusedLabelColor = primaryColor,
+        disabledLabelColor = primaryColor,
+    )
+
+    //анимация открытия палитры(поворота стрелки)
+    val animateRotateColorVector by animateFloatAsState(targetValue =
+    if(colorFlag) 180f else 0f,
+        animationSpec = tween(durationMillis = 300), label = ""
+    )
+    //анимация подчеркивания в палитре цвета групп
+    val animateBorderColor by animateDpAsState(targetValue =
+    if(!colorFlag) 300.dp else 250.dp,
+        animationSpec = tween(durationMillis = 400)
+    )
+    LazyColumn {
+        item {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = if (group.uid == null) "Создать группу" else "Редактировать группу",
+                    style = titleTextStyle
+                )
+                TextField(
+                    value = newNawe,
+                    onValueChange = { newNawe = it },
+                    label = {
+                        Text(
+                            text = "Название", style = bodyTextStyle
+                        )
+                    },
+                    singleLine = true,
+                    colors = textfieldStyle,
+                    modifier = Modifier.padding(top = 25.dp)
+                )
+                Box(
+                    Modifier
+                        .width(300.dp)
+                        .height(2.dp)
+                        .background(primaryColor)
+                )
+                //анимация изменения бокса палитры
+                val animateColorBox by animateDpAsState(
+                    targetValue = if (!colorFlag) 50.dp else 210.dp,
+                    animationSpec = tween(durationMillis = 400)
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(top = 25.dp)
+                        .width(300.dp)
+                        .height(animateColorBox)
+                        .border(
+                            width = if (colorFlag) 2.dp else 0.dp,
+                            color = if (colorFlag) primaryColor else backgroundColor,
+                            shape = RoundedCornerShape(4)
+                        ), contentAlignment = Alignment.TopCenter
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            Modifier
+                                .height(50.dp)
+                                .clickable {
+                                    colorFlag = !colorFlag
+                                }, contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(start = 25.dp, end = 25.dp)
+                                        .height(48.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = "Цвет", style = bodyTextStyle)
+
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.CenterEnd
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(start = 15.dp)
+                                                .width(25.dp)
+                                                .height(25.dp)
+                                                .background(
+                                                    if (newColor != "" && !colorFlag) parseColor(
+                                                        newColor
+                                                    ) else backgroundColor,
+                                                    shape = RoundedCornerShape(4)
+                                                ), contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(Res.drawable.vector),
+                                                tint = primaryColor, contentDescription = "",
+                                                modifier = Modifier
+                                                    .scale(0.7f)
+                                                    .rotate(animateRotateColorVector)
+                                            )
+                                        }
+
+                                    }
+                                }
+
+                                Box(
+                                    Modifier
+                                        .width(animateBorderColor)
+                                        .height(2.dp)
+                                        .background(primaryColor)
+                                )
+                            }
+
+                        }
+                        if (colorFlag) {
+                            LazyColumn(Modifier.height(160.dp)) {
+                                items(colorList) { color ->
+                                    Box(
+                                        Modifier
+                                            .height(50.dp)
+                                            .clickable {
+                                                if (color.colorS == newColor) {
+                                                    newColor = ""
+                                                } else {
+                                                    newColor = color.colorS
+                                                }
+                                                colorFlag = !colorFlag
+                                            }, contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .padding(start = 25.dp, end = 25.dp)
+                                                    .height(48.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(text = color.name, style = bodyTextStyle)
+                                                Box(
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentAlignment = Alignment.CenterEnd
+                                                ) {
+                                                    Box(
+                                                        Modifier
+                                                            .width(25.dp)
+                                                            .height(25.dp)
+                                                            .background(
+                                                                color.color,
+                                                                shape = RoundedCornerShape(4)
+                                                            ),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        if (newColor == color.colorS) {
+                                                            Icon(
+                                                                painter = painterResource(Res.drawable.ok),
+                                                                contentDescription = "",
+                                                                tint = primaryColor
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            Box(
+                                                Modifier
+                                                    .width(animateBorderColor)
+                                                    .height(2.dp)
+                                                    .background(primaryColor)
+                                            )
+                                        }
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+                Row(Modifier.padding(top = 25.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier
+                            .padding(end = 10.dp)
+                            .width(140.dp)
+                            .height(50.dp)
+                            .background(
+                                primaryColor,
+                                shape = RoundedCornerShape(10)
+                            )
+                            .clickable {
+                                newGroup = GroupTask(group.uid, newNawe, newColor)
+                                onBack(newGroup)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Удалить", style = TextStyle(
+                                fontSize = titleTextStyle.fontSize,
+                                fontWeight = titleTextStyle.fontWeight,
+                                fontFamily = titleTextStyle.fontFamily,
+                                color = backgroundColor
+                            )
+                        )
+
+                    }
+                    Box(
+                        Modifier
+                            .padding(start = 10.dp)
+                            .width(140.dp)
+                            .height(50.dp)
+                            .background(
+                                primaryColor,
+                                shape = RoundedCornerShape(10)
+                            )
+                            .clickable {
+                                newGroup = GroupTask(group.uid, newNawe, newColor)
+                                onSave(newGroup)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Сохранить", style = TextStyle(
+                                fontSize = titleTextStyle.fontSize,
+                                fontWeight = titleTextStyle.fontWeight,
+                                fontFamily = titleTextStyle.fontFamily,
+                                color = backgroundColor
+                            )
+                        )
+
+                    }
+                }
             }
         }
     }
@@ -474,7 +792,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit, onD
 //              bodyStyle:TextStyle -
 //=====================================================================================
 @Composable
-fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGroup: () -> Unit, onTapTask:() -> Unit, primaryColor:Color,backgroundColor:Color,titleStyle: TextStyle,bodyStyle: TextStyle){
+fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGroup: (GroupTask) -> Unit, onTapTask:(Task) -> Unit, primaryColor:Color,backgroundColor:Color,titleStyle: TextStyle,bodyStyle: TextStyle){
     //-----------------------------------------------------------------------------
     //Состояние отображения:
     //      false -> Группы
@@ -546,19 +864,23 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                            items(listTask){
                                task->
                                var dateTimeStart = DateAndTimeS(0,0,0,0,0,0)
-                               dateTimeStart.convertUnixTimeToDate1(task.start*1000)
+                               dateTimeStart.convertUnixTimeToDate1(task.start)
                                var dateTimeEnd = DateAndTimeS(0,0,0,0,0,0)
-                               dateTimeEnd.convertUnixTimeToDate1(task.end*1000)
+                               dateTimeEnd.convertUnixTimeToDate1(task.end)
                                var timet = DateAndTimeS(0,0,0,0,0,0)
                                timet.calculateDifference(dateTimeStart,dateTimeEnd)
                                var tstring=""
                                if (timet.day>0) tstring+=timet.day.toString() + "д."
                                tstring+= timet.hour.toString() + "ч."
                                if(timet.day==0) tstring+= timet.minute.toString() + "м."
-                               taskCardTracker(TaskView(
-                                   task.uid!!, task.name!!, dateTimeStart, dateTimeEnd,
-                                   parseColor(listGroup[task.groupID - 1].color), tstring
-                               ),titleStyle,bodyStyle,primaryColor)
+                               Box(Modifier.clickable { onTapTask(task) }) {
+                                   taskCardTracker(
+                                       TaskView(
+                                           task.uid!!, task.name!!, dateTimeStart, dateTimeEnd,
+                                           parseColor(listGroup.value[task.groupID].color), tstring
+                                       ), titleStyle, bodyStyle, primaryColor
+                                   )
+                               }
                            }
                        }
                     }
@@ -573,7 +895,9 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                         LazyColumn {
                             items(listGroupTask){
                                     group->
-                                groupCardTracker(group,titleStyle,primaryColor)
+                                Box(Modifier.clickable { onTapGroup(group) }) {
+                                    groupCardTracker(group, titleStyle, primaryColor)
+                                }
                             }
                         }
                     }
@@ -674,3 +998,16 @@ fun parseColor(colorString: String): Color {
     return Color(rgb[0], rgb[1], rgb[2])
 }
 
+//=====================================================================================
+//DatePickerShared
+//Input values:
+//              onDateSelected:(Long?) -> Unit - date transfer
+//              onDismiss:() -> Unit - exit
+//=====================================================================================
+@Composable
+expect fun DatePickerShared(onDateSelected: (Long?) -> Unit,
+                            onDismiss: () -> Unit)
+
+@Composable
+expect fun TimePickerModal(onConfirm: (DateAndTimeS) -> Unit,
+                           onDismiss: () -> Unit,)

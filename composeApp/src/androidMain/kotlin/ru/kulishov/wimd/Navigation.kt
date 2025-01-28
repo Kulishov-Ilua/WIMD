@@ -115,7 +115,7 @@ fun BottomNavigationBar(navController: NavController) {
 @Composable
 fun NavHostContainer(
     navController: NavHostController, padding: PaddingValues,
-    listTask:List<Task>, listGroupTask: List<GroupTask>
+    listTask:List<Task>, listGroupTask: List<GroupTask>,redactTask: (Boolean,Task) -> Unit, redactGroup: (Boolean, GroupTask) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -123,7 +123,13 @@ fun NavHostContainer(
         modifier = Modifier.padding(paddingValues = padding),
         builder = {
             composable("tracker") {
-                TrackerScreen(listTask,listGroupTask)
+                TrackerScreen(listTask,listGroupTask,{
+                    type, task ->
+                    redactTask(type,task)
+                }, {
+                        type, group ->
+                    redactGroup(type,group)
+                })
                         }
 
             composable("calendar") {                //calendarScreen(navController)

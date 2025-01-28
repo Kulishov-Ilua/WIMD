@@ -71,9 +71,9 @@ class MainActivity : ComponentActivity() {
                 //Получаем данные с бд
                 //------------------------------------------------------
                 var groups=db.groupDao().getAllGroup().asLiveData().observe(this){
-                    listGroup.clear()
+                    listGroup.value= emptyList()
                     it.forEach {
-                        listGroup+=GroupTask(it.uid,it.name, it.color)
+                        listGroup.value+=GroupTask(it.uid,it.name, it.color)
                     }
                 }
                 var tasks = db.trackerDao().getAllTask().asLiveData().observe(this){
@@ -86,11 +86,16 @@ class MainActivity : ComponentActivity() {
                 //Обновление данных бд
                 //      0 - ожидание
                 //      1 - обновление групп
+                //      2 - удаление группы
+                //      3 - обновление задачи
+                //      4 - удаление задачи
                 //------------------------------------------------------
-                var updateDataStatus by remember { mutableStateOf(0) }
+                var updateDataStatus by remember { mutableStateOf(5) }
                 //Группа для записи в бд
                 var updateGroupValue by remember { mutableStateOf(GroupTask(null,"","")) }
-                val coroutineScope = rememberCoroutineScope()
+                var updateTaskValue by remember { mutableStateOf(Task(null,"",0L,0L,-1)) }
+
+                val coroutineScope = CoroutineScope(Dispatchers.IO)
                 LaunchedEffect(updateDataStatus) {
                     if (updateDataStatus > 0) {
                         coroutineScope.launch {
@@ -98,8 +103,30 @@ class MainActivity : ComponentActivity() {
                                 1->{
                                     if(updateGroupValue.uid!=null){
                                         db.groupDao().updateGroup(updateGroupValue)
-                                        updateGroupValue = GroupTask(null, "", "")
                                     }else {db.groupDao().insertGroup(updateGroupValue)}
+                                    updateGroupValue = GroupTask(null, "", "")
+                                    updateDataStatus=0
+                                }
+                                2->{
+                                    if(updateGroupValue.uid!=null){
+                                        db.groupDao().deleteGroup(updateGroupValue)
+                                    }
+                                    updateGroupValue = GroupTask(null, "", "")
+                                    updateDataStatus=0
+                                }
+                                3->{
+                                    if(updateTaskValue.uid!=null){
+                                        db.trackerDao().updateTask(updateTaskValue)
+                                    }else {db.trackerDao().insertTask(updateTaskValue)}
+                                    updateTaskValue = Task(null,"",0L,0L,-1)
+                                    updateDataStatus=0
+                                }
+                                4->{
+                                    if(updateTaskValue.uid!=null){
+                                        db.trackerDao().deleteTask(updateTaskValue)
+
+                                    }
+                                    updateTaskValue = Task(null,"",0L,0L,-1)
                                     updateDataStatus=0
                                 }
                             }
@@ -115,7 +142,18 @@ class MainActivity : ComponentActivity() {
                         },
                         content = {
                                 padding ->
-                        NavHostContainer(navController,padding, listTask.value, listGroup)
+                        NavHostContainer(navController,padding, listTask.value, listGroup.value,
+                            {
+                                type,task ->
+                                updateTaskValue=task
+                                if(type) updateDataStatus = 3
+                                else updateDataStatus=4
+                            },{
+                                type,group ->
+                                updateGroupValue=group
+                                if(type) updateDataStatus=1
+                                else updateDataStatus=2
+                            })
                         }
                     )
                 }

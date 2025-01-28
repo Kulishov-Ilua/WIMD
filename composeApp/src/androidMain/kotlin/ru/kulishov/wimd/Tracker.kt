@@ -55,9 +55,10 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 //              buttonLabel:TextStyle - buttonLabel
 //              stateHeight:Boolean - tracker height state
 //              onCreate:()->Unit - button create unit
+//              onStop:(Long,Long)->Unit -
 //=====================================================================================
 @Composable
-fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: TextStyle, buttonLabel: TextStyle, stateHeight:Boolean,onCreate:()->Unit){
+fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: TextStyle, buttonLabel: TextStyle, stateHeight:Boolean,onCreate:()->Unit,onStop:(Long,Long)->Unit){
 
     var currentTime by remember { mutableStateOf(0L) }
     var timerStartTime = remember { mutableStateOf(0L) }
@@ -141,6 +142,7 @@ fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: T
         timerStartTime.value+=10800000L
         timerEndTime+=10800000L
         isTrackerRunning=false
+        onStop(timerStartTime.value,timerEndTime)
         timerStartTime.value=0L
         currentTime=0L
     }
@@ -170,7 +172,7 @@ fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: T
                 }
 
             }
-            if(!isTrackerRunning){
+            if(!isTrackerRunning||isTrackerRunning&&stateHeight){
                 Row(modifier = Modifier.padding(top=if(stateHeight)30.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
                     if(createButtonAlpha.value>0f){
                         Button(onClick ={
@@ -235,23 +237,35 @@ fun timeconverter(time:Long,styleLabel: TextStyle){
 //Input values:
 //              listTask:List<Task> -
 //              listGroupTask: List<GroupTask> -
+//              redactTask: (Boolean,Task) -> Unit
+//              redactGroup: (Boolean, GroupTask) -> Unit
 //=====================================================================================
 @Composable
-fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>){
+fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>, redactTask: (Boolean,Task) -> Unit, redactGroup: (Boolean, GroupTask) -> Unit){
     //--------------------------------------------------------------
     //Состояния экрана трекера:
     //      0,1 -> Блок трекера, списки задач и групп
     //      2 -> Блок выбора создания, списки задач и групп
-    //      3 -> Блок создания задачи
+    //      3 -> Блок создания
+    //      4 -> Блок создания группы
     //--------------------------------------------------------------
     var stateTrackerApp by remember { mutableStateOf(0) }
     var taskTransfer by remember { mutableStateOf(Task(null,"",0L,0L, -1)) }
+    var groupTransfer by remember { mutableStateOf(GroupTask(null,"","")) }
+
     bottomIslandScreen(stateTrackerApp,{di-> stateTrackerApp=di},{
         Box(Modifier.fillMaxSize().background(color = androidx.compose.material3.MaterialTheme.colorScheme.background)
             , contentAlignment = Alignment.TopCenter){
                 Box(Modifier.padding(top=25.dp)){
                     taskGroupScreen(
-                        listTask, listGroupTask,{},{},MaterialTheme.colorScheme.primary,MaterialTheme.colorScheme.background,
+                        listTask, listGroupTask,{ group ->
+                            groupTransfer=group
+                            stateTrackerApp=4
+                        },{
+                            task->
+                            taskTransfer=task
+                            stateTrackerApp=3
+                        },MaterialTheme.colorScheme.primary,MaterialTheme.colorScheme.background,
                         MaterialTheme.typography.titleMedium,MaterialTheme.typography.bodyMedium)
                 }
 
@@ -262,9 +276,29 @@ fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>){
             0,1 ->  TrackerBlock(androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.colorScheme.background,
                 androidx.compose.material3.MaterialTheme.typography.titleLarge,androidx.compose.material3.MaterialTheme.typography.titleMedium,stateTrackerApp==0,{
                     stateTrackerApp=2
+                },{
+                    start,stop-> taskTransfer.start=start
+                    taskTransfer.end=stop
+                    stateTrackerApp=3
                 })
-            2 -> chooseCreateBlock({},{stateTrackerApp=3}, MaterialTheme.typography.titleLarge,MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.primary)
-            3 -> createTaskBlock(taskTransfer,{},{},{ return@createTaskBlock 0L },{ return@createTaskBlock 0L },androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.typography.titleMedium,
+            2 -> chooseCreateBlock({
+                groupTransfer=GroupTask(null,"","")
+                stateTrackerApp=4},{
+                    taskTransfer=Task(null,"",0L,0L, -1)
+                    stateTrackerApp=3}, MaterialTheme.typography.titleLarge,MaterialTheme.colorScheme.background,MaterialTheme.colorScheme.primary)
+            3 -> createTaskBlock(taskTransfer,
+                {task ->
+                redactTask(true,task)
+                stateTrackerApp=0
+                },
+                {
+                    task -> redactTask(false,task)
+                    stateTrackerApp=0
+                },androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                androidx.compose.material3.MaterialTheme.typography.titleMedium)
+            4 -> createGroupBlock(groupTransfer,{group-> redactGroup(true,group)
+                                                stateTrackerApp=0},{group-> redactGroup(false,group)
+                stateTrackerApp=0},androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,androidx.compose.material3.MaterialTheme.typography.titleMedium,
                 androidx.compose.material3.MaterialTheme.typography.titleMedium)
         }
 

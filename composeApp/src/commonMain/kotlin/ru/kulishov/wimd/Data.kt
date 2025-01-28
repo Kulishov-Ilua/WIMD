@@ -58,10 +58,12 @@ val colorList = listOf(
     ColorClass(7,"Пурпурный", Color(169,82,170), "169,82,170"),
 )
 
-var listGroup = mutableListOf<GroupTask>(
+var listGroup = mutableStateOf (
+    listOf(
     GroupTask(0,"1","192,61,61"),
     GroupTask(1,"2","192,61,61"),
     GroupTask(2,"3","192,61,61"),
+    )
 )
 
 var listTask = mutableStateOf(emptyList<Task>())
