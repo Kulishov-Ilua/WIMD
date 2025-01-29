@@ -129,7 +129,8 @@ fun NavHostContainer(
                 }, {
                         type, group ->
                     redactGroup(type,group)
-                })
+                }, androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    androidx.compose.material3.MaterialTheme.typography.titleMedium,androidx.compose.material3.MaterialTheme.typography.bodyMedium,androidx.compose.material3.MaterialTheme.typography.titleLarge)
                         }
 
             composable("calendar") {                //calendarScreen(navController)

@@ -11,6 +11,7 @@ package ru.kulishov.wimd
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,8 +30,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
+import androidx.compose.material.ButtonColors
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
@@ -44,6 +47,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -52,12 +56,262 @@ import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import wimd.composeapp.generated.resources.Res
 import wimd.composeapp.generated.resources.ok
 import wimd.composeapp.generated.resources.vector
+
+//=====================================================================================
+//taskGroupScreen
+//Input values:
+//              listTask:List<Task> -
+//              listGroupTask: List<GroupTask> -
+//              redactTask: (Boolean,Task) -> Unit
+//              redactGroup: (Boolean, GroupTask) -> Unit
+//              backgroundColor:Color - Background color
+//              primaryColor:Color - primary color
+//              titleMedium:TextStyle -
+//              bodyMedium:TextStyle -
+//              titleLarge:TextStyle -
+//=====================================================================================
+@Composable
+fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>, redactTask: (Boolean,Task) -> Unit, redactGroup: (Boolean, GroupTask) -> Unit, backgroundColor: Color,primaryColor: Color,
+                  titleMedium:TextStyle,bodyMedium:TextStyle,titleLarge:TextStyle){
+    //--------------------------------------------------------------
+    //Состояния экрана трекера:
+    //      0,1 -> Блок трекера, списки задач и групп
+    //      2 -> Блок выбора создания, списки задач и групп
+    //      3 -> Блок создания
+    //      4 -> Блок создания группы
+    //--------------------------------------------------------------
+    var stateTrackerApp by remember { mutableStateOf(0) }
+    var taskTransfer by remember { mutableStateOf(Task(null,"",0L,0L, -1)) }
+    var groupTransfer by remember { mutableStateOf(GroupTask(null,"","")) }
+
+    bottomIslandScreen(stateTrackerApp,{di-> stateTrackerApp=di},{
+        Box(Modifier.fillMaxSize().background(color = backgroundColor)
+            , contentAlignment = Alignment.TopCenter){
+            Box(Modifier.padding(top=25.dp)){
+                taskGroupScreen(
+                    listTask, listGroupTask,{ group ->
+                        groupTransfer=group
+                        stateTrackerApp=4
+                    },{
+                            task->
+                        taskTransfer=task
+                        stateTrackerApp=3
+                    },primaryColor,backgroundColor,
+                    titleMedium,bodyMedium)
+            }
+
+
+        }
+    },{
+        when(stateTrackerApp){
+            0,1 ->  TrackerBlock(primaryColor,backgroundColor,
+               titleLarge,titleMedium,stateTrackerApp==0,{
+                    stateTrackerApp=2
+                },{
+                        start,stop-> taskTransfer.start=start
+                    taskTransfer.endTime=stop
+                    stateTrackerApp=3
+                })
+            2 -> chooseCreateBlock({
+                groupTransfer=GroupTask(null,"","")
+                stateTrackerApp=4},{
+                taskTransfer=Task(null,"",0L,0L, -1)
+                stateTrackerApp=3}, titleLarge,backgroundColor,primaryColor)
+            3 -> createTaskBlock(taskTransfer,
+                {task ->
+                    redactTask(true,task)
+                    stateTrackerApp=0
+                },
+                {
+                        task -> redactTask(false,task)
+                    stateTrackerApp=0
+                },backgroundColor,primaryColor,titleMedium,
+                titleMedium)
+            4 -> createGroupBlock(groupTransfer,{group-> redactGroup(true,group)
+                stateTrackerApp=0},{group-> redactGroup(false,group)
+                stateTrackerApp=0},backgroundColor,primaryColor,titleMedium,
+                titleMedium)
+        }
+
+    }, primaryColor, backgroundColor)
+
+
+}
+
+
+//=====================================================================================
+//TrackerBlock
+//Input values:
+//              backgroundColor:Color - Background color
+//              primaryColor:Color - primary color
+//              typographyLabel:TextStyle - typographyLabel
+//              buttonLabel:TextStyle - buttonLabel
+//              stateHeight:Boolean - tracker height state
+//              onCreate:()->Unit - button create unit
+//              onStop:(Long,Long)->Unit -
+//=====================================================================================
+@Composable
+fun TrackerBlock(backgroundColor: Color, primaryColor: Color, typographyLabel: TextStyle, buttonLabel: TextStyle, stateHeight:Boolean,onCreate:()->Unit,onStop:(Long,Long)->Unit){
+
+    var currentTime by remember { mutableStateOf(0L) }
+    var timerStartTime = remember { mutableStateOf(0L) }
+    //флаг запуска трекера
+    var isTrackerRunning by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    //--------------------------------------------------------------------------
+    // Анимация секундомера:
+    //      Уменьшить размер - если изменился размер острова и трекер запущен
+    //      Скрыть - если уменьшился размер острова и трекер не запущен
+    //-------------------------------------------------------------------------
+    val delayTimeLabel = 300 //задержка при появлении сбоку кнопки стоп
+    var timeLabelSize = animateIntAsState(
+        targetValue = if(!stateHeight&&isTrackerRunning) typographyLabel.fontSize.value.toInt()-2
+        else typographyLabel.fontSize.value.toInt()
+        , animationSpec = tween(durationMillis = delayTimeLabel, delayMillis =
+        if(!stateHeight&&isTrackerRunning) 0 else delayTimeLabel)
+    )
+    var timeLabelAlpha = animateFloatAsState(
+        targetValue = if(!stateHeight&&!isTrackerRunning) 0f
+        else 1f,
+        animationSpec = tween(delayMillis = if(stateHeight||isTrackerRunning) delayTimeLabel else 0)
+    )
+    //--------------------------------------------------------------------------
+    // Анимация кнопки стоп если остров узкий:
+    //      Показать - если изменился размер острова и трекер запущен
+    //-------------------------------------------------------------------------
+    var stopButtonInRowAnimate = animateFloatAsState(
+        targetValue = if(!stateHeight&&isTrackerRunning) 1f
+        else 0f
+        , animationSpec = tween(durationMillis = delayTimeLabel, delayMillis =
+        if(!stateHeight&&isTrackerRunning) delayTimeLabel else 0)
+
+    )
+    //--------------------------------------------------------------------------
+    // Анимация кнопки стоп если остров высокий:
+    //      Показать - когда трекер не запущен или запущен и большой остров
+    //      Увеличить - если запустился трекер и остров широкий
+    //-------------------------------------------------------------------------
+    val delayButtonDown = 300 //задержка на ожидание исчезновение 2 кнопки в нижнем ряду
+    var stopButtonAlpha = animateFloatAsState(
+        targetValue = if(!isTrackerRunning || isTrackerRunning&&stateHeight) 1f
+        else 0f
+    )
+    var stopButtonWidth = animateDpAsState(
+        targetValue = if(isTrackerRunning&&stateHeight) 280.dp
+        else 150.dp
+        , animationSpec = tween(delayMillis = if(isTrackerRunning&&stateHeight) 0/*delayButtonDown*/ else 0, durationMillis = delayButtonDown)
+    )
+    //--------------------------------------------------------------------------
+    // Анимация кнопки создать если трекер запустился:
+    //      Скрыть - когда трекер запущен
+    //-------------------------------------------------------------------------
+    var createButtonAlpha = animateFloatAsState(
+        targetValue = if(!isTrackerRunning) 1f
+        else 0f
+        , animationSpec = tween(delayMillis = if(!isTrackerRunning )delayButtonDown else 0, durationMillis = delayButtonDown)
+    )
+    //=====================================================================================
+    //Функция запуска секундомера
+    //=====================================================================================
+    fun start() {
+        if (isTrackerRunning) return
+        isTrackerRunning = true
+        coroutineScope.launch {
+            val startTime = getSystemTime()
+            timerStartTime.value=startTime
+
+            while (isTrackerRunning) {
+                currentTime = getSystemTime() - startTime
+                delay(10L)
+            }
+        }
+    }
+
+    //=====================================================================================
+    //Функция остановки секундомера
+    //=====================================================================================
+    fun stop() {
+        var timerEndTime = getSystemTime()
+        timerStartTime.value+=10800000L
+        timerEndTime+=10800000L
+        isTrackerRunning=false
+        onStop(timerStartTime.value,timerEndTime)
+        timerStartTime.value=0L
+        currentTime=0L
+    }
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(verticalAlignment = Alignment.CenterVertically){
+                if(timeLabelAlpha.value>0f){
+                    Box(Modifier.alpha(timeLabelAlpha.value)){
+                        timeconverter(currentTime,TextStyle(
+                            fontWeight = typographyLabel.fontWeight,
+                            fontSize = timeLabelSize.value.sp,
+                            color = primaryColor
+                        ))
+                    }
+                }
+                if(stopButtonInRowAnimate.value>0f){
+                    Button(onClick ={stop()},
+                        shape = RoundedCornerShape(10),
+                        modifier = Modifier.padding(start=20.dp).width(150.dp).height(50.dp).alpha(stopButtonInRowAnimate.value)
+                        , colors = ButtonDefaults.buttonColors(primaryColor,backgroundColor,primaryColor,backgroundColor)
+                    ) {
+                        Text("Стоп", style = TextStyle(
+                            fontSize = buttonLabel.fontSize,
+                            fontWeight = buttonLabel.fontWeight,
+                            color = backgroundColor))
+                    }
+                }
+
+            }
+            if(!isTrackerRunning||isTrackerRunning&&stateHeight){
+                Row(modifier = Modifier.padding(top=if(stateHeight)30.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if(createButtonAlpha.value>0f){
+                        Button(onClick ={
+                            onCreate()
+                        },
+                            shape = RoundedCornerShape(10),
+                            modifier = Modifier.padding(end = 15.dp).width(150.dp).height(50.dp).alpha(createButtonAlpha.value)
+                            , colors = ButtonDefaults.buttonColors(primaryColor,backgroundColor,primaryColor,backgroundColor)
+                        ) {
+                            Text("Создать", style = TextStyle(
+                                fontSize = buttonLabel.fontSize,
+                                fontWeight = buttonLabel.fontWeight,
+                                color = backgroundColor)
+                            )
+                        }
+                    }
+
+                    if(stopButtonAlpha.value>0f){
+                        Button(onClick ={
+                            if(isTrackerRunning) stop()
+                            else start()
+                        },
+                            shape = RoundedCornerShape(10),
+                            modifier = Modifier.padding(start = 15.dp).width(stopButtonWidth.value).height(50.dp).alpha(stopButtonAlpha.value)
+                            , colors = ButtonDefaults.buttonColors(primaryColor,backgroundColor,primaryColor,backgroundColor)
+                        ) {
+                            Text(if(isTrackerRunning) "Стоп" else "Старт", style = TextStyle(
+                                fontSize = buttonLabel.fontSize,
+                                fontWeight = buttonLabel.fontWeight,
+                                color = backgroundColor))
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+}
 
 
 //=====================================================================================
@@ -123,7 +377,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
     var newTask by remember { mutableStateOf(task) }
     var newName by remember { mutableStateOf(task.name!!) }
     var newStart by remember { mutableStateOf(task.start) }
-    var newEnd by remember { mutableStateOf(task.end) }
+    var newEnd by remember { mutableStateOf(task.endTime) }
     var newGroup by remember { mutableStateOf(task.groupID) }
     var newStartFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
     var newEndFormated by remember { mutableStateOf(DateAndTimeS(0,0,0,0,0,0)) }
@@ -200,7 +454,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                             contentAlignment = Alignment.Center){
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = if (newStart > 0L) "${newStartFormated.day}/${newStartFormated.month}/${newStartFormated.year}" else "Дата",
+                                    text = if (newStart > 0L) "${intDataFormatTransformation( newStartFormated.day)}/${intDataFormatTransformation( newStartFormated.month)}/${intDataFormatTransformation( newStartFormated.year)}" else "Дата",
                                     style = textfieldTextStyle
                                 )
                                 Box(
@@ -221,7 +475,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                             contentAlignment = Alignment.Center){
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = if (newStart>0L) "${newStartFormated.hour}:${newStartFormated.minute}" else "Время",
+                                    text = if (newStart>0L) "${intDataFormatTransformation( newStartFormated.hour)}:${intDataFormatTransformation(newStartFormated.minute)}" else "Время",
                                     style = textfieldTextStyle
                                 )
                                 Box(
@@ -250,7 +504,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = if (newEnd > 0L) "${newEndFormated.day}/${newEndFormated.month}/${newEndFormated.year}" else "Дата",
+                                    text = if (newEnd > 0L) "${intDataFormatTransformation(newEndFormated.day)}/${intDataFormatTransformation(newEndFormated.month)}/${intDataFormatTransformation(newEndFormated.year)}" else "Дата",
                                     style = textfieldTextStyle
                                 )
                                 Box(
@@ -273,7 +527,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = if (newEnd > 0L) "${newEndFormated.hour}:${newEndFormated.minute}" else "Время",
+                                    text = if (newEnd > 0L) "${intDataFormatTransformation(newEndFormated.hour)}:${intDataFormatTransformation(newEndFormated.minute)}" else "Время",
                                     style = textfieldTextStyle
                                 )
                                 Box(
@@ -474,7 +728,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
         }
     }
     if(pickersState>0){
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter){
             when(pickersState){
                 1-> DatePickerShared({ date->newStart=date!! },{pickersState=0})
                 2->TimePickerModal({
@@ -484,7 +738,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                     timeF.hour=time.hour
                     timeF.minute=time.minute
                     timeF.second=0
-                    newStart=timeF.convertToSeconds(timeF)
+                    newStart=timeF.convertToSeconds(timeF)*1000
                     pickersState=0
                 },{
                     pickersState=0
@@ -498,7 +752,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                     timeF.hour=time.hour
                     timeF.minute=time.minute
                     timeF.second=0
-                    newEnd=timeF.convertToSeconds(timeF)
+                    newEnd=timeF.convertToSeconds(timeF)*1000
                     pickersState=0
                 },{
                     pickersState=0
@@ -866,7 +1120,7 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                                var dateTimeStart = DateAndTimeS(0,0,0,0,0,0)
                                dateTimeStart.convertUnixTimeToDate1(task.start)
                                var dateTimeEnd = DateAndTimeS(0,0,0,0,0,0)
-                               dateTimeEnd.convertUnixTimeToDate1(task.end)
+                               dateTimeEnd.convertUnixTimeToDate1(task.endTime)
                                var timet = DateAndTimeS(0,0,0,0,0,0)
                                timet.calculateDifference(dateTimeStart,dateTimeEnd)
                                var tstring=""
@@ -1007,7 +1261,21 @@ fun parseColor(colorString: String): Color {
 @Composable
 expect fun DatePickerShared(onDateSelected: (Long?) -> Unit,
                             onDismiss: () -> Unit)
-
+//=====================================================================================
+//TimePickerModal
+//Input values:
+//              onConfirm: (DateAndTimeS) -> Unit - time transfer
+//              onDismiss:() -> Unit - exit
+//=====================================================================================
 @Composable
 expect fun TimePickerModal(onConfirm: (DateAndTimeS) -> Unit,
                            onDismiss: () -> Unit,)
+//=====================================================================================
+//getSystemTime
+//Output values:
+//              time:Long - currentTime
+//=====================================================================================
+expect fun getSystemTime():Long
+
+@Composable
+expect fun timeconverter(time:Long,styleLabel: TextStyle)

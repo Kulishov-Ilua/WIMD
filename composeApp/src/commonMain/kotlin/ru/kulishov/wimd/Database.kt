@@ -49,7 +49,7 @@ data class Task(
     @PrimaryKey(autoGenerate = true) val uid: Long?=null,
     @ColumnInfo(name = "name") var name: String?,
     @ColumnInfo(name = "start") var start: Long,
-    @ColumnInfo(name = "end") var end: Long,
+    @ColumnInfo(name = "endTime") var endTime: Long,
     @ColumnInfo(name = "groupID") val groupID: Int,
 
     )
@@ -86,6 +86,8 @@ interface DaoTracker{
     fun insertTask(task: Task)
     @Query("SELECT * FROM Task")
     fun getAllTask(): Flow<List<Task>>
+    @Query("SELECT * FROM Task WHERE (start < :dayEnd AND endTime >= :dayStart)")
+    fun getDayTask(dayStart: Long, dayEnd: Long): Flow<List<Task>>
     @Delete
     fun deleteTask(task: Task)
     @Update

@@ -8,6 +8,8 @@ package ru.kulishov.wimd
 //####  Date:18.01.2025                              ###############################################
 //##################################################################################################
 //##################################################################################################
+import android.icu.util.Calendar
+import android.icu.util.TimeZone
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,6 +41,7 @@ import androidx.room.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 import kotlin.coroutines.EmptyCoroutineContext
 
 class MainActivity : ComponentActivity() {
@@ -70,16 +73,19 @@ class MainActivity : ComponentActivity() {
                 //------------------------------------------------------
                 //Получаем данные с бд
                 //------------------------------------------------------
+                var selectedDate by remember { mutableStateOf(Calendar.getInstance(TimeZone.GMT_ZONE)) }
                 var groups=db.groupDao().getAllGroup().asLiveData().observe(this){
                     listGroup.value= emptyList()
                     it.forEach {
                         listGroup.value+=GroupTask(it.uid,it.name, it.color)
                     }
                 }
-                var tasks = db.trackerDao().getAllTask().asLiveData().observe(this){
+                var tasks = db.trackerDao().getDayTask(getDayStartAndEnd(selectedDate).first,
+                    getDayStartAndEnd(selectedDate).second
+                ).asLiveData().observe(this){
                     listTask.value= emptyList()
                     it.forEach{
-                        listTask.value+=Task(it.uid,it.name,it.start, it.end, it.groupID)
+                        listTask.value+=Task(it.uid,it.name,it.start, it.endTime, it.groupID)
                     }
                 }
                 //------------------------------------------------------

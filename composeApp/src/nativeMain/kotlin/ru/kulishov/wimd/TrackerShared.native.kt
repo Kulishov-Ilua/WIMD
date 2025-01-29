@@ -10,6 +10,7 @@ package ru.kulishov.wimd
 //##################################################################################################
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.TextStyle
 
 //=====================================================================================
 //DatePickerShared (Realization)
@@ -27,4 +28,23 @@ actual fun DatePickerShared(
 
 @Composable
 actual fun TimePickerModal(onConfirm: (DateAndTimeS) -> Unit, onDismiss: () -> Unit) {
+}
+//=====================================================================================
+//getSystemTime (IOS)
+//Output values:
+//              time:Long - currentTime
+//=====================================================================================
+
+actual fun getSystemTime(): Long {
+    TODO("Not yet implemented")
+}
+
+//=====================================================================================
+//timeconverter (IOS)
+//Input values:
+//              time:Long - current time
+//              styleLabel:TextStyle - label style
+//=====================================================================================
+@Composable
+actual fun timeconverter(time: Long, styleLabel: TextStyle) {
 }

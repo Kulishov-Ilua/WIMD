@@ -103,3 +103,19 @@ fun NavDoubleButtom(startState:Boolean, onButState:(Boolean) -> Unit, first:Stri
 
     }
 }
+
+//=====================================================================================
+//intDataFormatTransformation
+//Input values:
+//              value:Int - input
+//Output values:
+//              output:String - output
+//=====================================================================================
+fun intDataFormatTransformation(value:Int):String{
+    var ret =value.toString()
+    if(ret.length<2){
+        ret = "0"
+        ret+=value
+    }
+    return ret
+}
