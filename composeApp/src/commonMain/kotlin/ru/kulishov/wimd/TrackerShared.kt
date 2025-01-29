@@ -16,6 +16,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 
@@ -1053,12 +1055,24 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
     //      true -> Задачи
     //-----------------------------------------------------------------------------
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter){
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            val listState = rememberLazyListState()
-            val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
-            val coroutineScope = rememberCoroutineScope()
-            var buttonScroll by remember { mutableStateOf(-1) }
-            NavDoubleButtom(currentPage==0,{
+        val listState = rememberLazyListState()
+        val currentPage by remember { derivedStateOf { listState.firstVisibleItemIndex } }
+        var buttonScroll by remember { mutableStateOf(-1) }
+        val coroutineScope = rememberCoroutineScope()
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier =
+        Modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures { change, dragAmount ->
+                change.consume()
+                if (dragAmount > 0) {
+                    buttonScroll=0
+                } else {
+                    buttonScroll=1
+                }
+            }
+        }) {
+
+
+            NavDoubleButtom(currentPage==0&&buttonScroll!=1,{
                 rec -> if(rec){
               buttonScroll = 0
             }else{
@@ -1067,8 +1081,8 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
             },"Задачи","Группы",titleStyle,backgroundColor,primaryColor)
 
             //чекаем смещение
-            val currentOffset by remember { derivedStateOf { listState.firstVisibleItemScrollOffset } }
-            var fixOffset by remember { mutableStateOf(0) }
+            //val currentOffset by remember { derivedStateOf { listState.firstVisibleItemScrollOffset } }
+            //var fixOffset by remember { mutableStateOf(0) }
             //println("Current: $currentOffset fix: $fixOffset")
 
             LaunchedEffect(buttonScroll){
@@ -1076,18 +1090,19 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                     coroutineScope.launch {
                         buttonScroll=-1
                         listState.animateScrollToItem(0)
-                        fixOffset=0
+                        //fixOffset=0
                     }
                 }
                 if(buttonScroll==1){
                     coroutineScope.launch {
                         buttonScroll=-1
                         listState.animateScrollToItem(1)
-                        fixOffset=1000
+                        //fixOffset=1000
                     }
                 }
 
             }
+            /*
             LaunchedEffect(currentOffset) {
                 if (currentOffset > fixOffset&&buttonScroll<0) {
                     // Свайп вправо
@@ -1103,9 +1118,11 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                     }
                 }
             }
+             */
             LazyRow(
                 state = listState,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                userScrollEnabled = false
             ) {
                 item() {
                     Box(
