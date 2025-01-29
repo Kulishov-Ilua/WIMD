@@ -117,7 +117,9 @@ fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>, redactTas
                titleLarge,titleMedium,stateTrackerApp==0,{
                     stateTrackerApp=2
                 },{
-                        start,stop-> taskTransfer.start=start
+                        start,stop->
+                    taskTransfer=Task(null,"",0L,0L, -1)
+                    taskTransfer.start=start
                     taskTransfer.endTime=stop
                     stateTrackerApp=3
                 })
@@ -807,6 +809,8 @@ fun createGroupBlock(group:GroupTask,onSave: (GroupTask) -> Unit, onBack:(GroupT
         unfocusedLabelColor = primaryColor,
         focusedLabelColor = primaryColor,
         disabledLabelColor = primaryColor,
+        focusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent
     )
 
     //анимация открытия палитры(поворота стрелки)
