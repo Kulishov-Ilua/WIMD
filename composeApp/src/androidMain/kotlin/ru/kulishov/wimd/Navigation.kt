@@ -133,7 +133,9 @@ fun NavHostContainer(
                     androidx.compose.material3.MaterialTheme.typography.titleMedium,androidx.compose.material3.MaterialTheme.typography.bodyMedium,androidx.compose.material3.MaterialTheme.typography.titleLarge)
                         }
 
-            composable("calendar") {                //calendarScreen(navController)
+            composable("calendar") {
+                calendarScreen(emptyList(), DateAndTimeS(2025,3,23,0,0,0),androidx.compose.material3.MaterialTheme.colorScheme.background
+                    ,androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.typography.titleMedium, androidx.compose.material3.MaterialTheme.typography.bodyMedium,{},{})
             }
 
             /*composable("counter") {                emptyScreen()            }*/
