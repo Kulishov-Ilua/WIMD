@@ -153,81 +153,68 @@ fun hourColumn(listTask:List<List<TaskView>>,currentDay:Long,title: TextStyle,co
     Box() {
         LazyColumn(state = stateL, modifier = Modifier.fillMaxWidth()) {
             item {
-                Box(Modifier.fillMaxWidth().height(50.dp)){
-                    if(myTime.hour==0){
-                        val newPading = ( myTime.minute*5/6)
-                        Box(Modifier.padding(top = newPading.dp)) {
-                            Box(
-                                Modifier.padding(top = 10.dp, end = 90.dp).fillMaxWidth().height(3.dp)
-                                    .background(color = if(transferDate.dateCompare(myTime)) Color.Red else Color.Gray)
-                            )
-                            Box(
-                                Modifier.padding(end = 25.dp).fillMaxWidth(),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Text(
-                                    if (myTime.hour < 10) "0${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}"
-                                    else "${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}",
-                                    modifier = Modifier.padding(end = 5.dp), style = TextStyle(
-                                        fontSize = title.fontSize,
-                                        fontWeight = title.fontWeight,
-                                        fontFamily = title.fontFamily,
-                                        color = if(transferDate.dateCompare(myTime)) Color.Red else Color.Gray
+                Box {
+                    Column(
+                        Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(Modifier.fillMaxWidth().height(50.dp)) {
+
+                        }
+                        for (i in 0 until 23) {
+                            Box(Modifier.fillMaxWidth().height(50.dp)) {
+                                Row(
+                                    modifier = Modifier.padding(start = 25.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        if ((i + 1) < 10) "0${(i + 1)}:00" else "${(i + 1)}:00",
+                                        modifier = Modifier.padding(end = 5.dp),
+                                        style = TextStyle(
+                                            fontSize = title.fontSize,
+                                            fontWeight = title.fontWeight,
+                                            fontFamily = title.fontFamily,
+                                            color = corpColor
+                                        )
                                     )
-                                )
+                                    Box(
+                                        Modifier.fillMaxWidth().height(2.dp)
+                                            .background(color = corpColor)
+                                    )
+                                }
+
+
                             }
                         }
                     }
-                }
-            }
-            items(23) { i ->
-                Box(Modifier.fillMaxWidth().height(50.dp)) {
-                    Row(
-                        modifier =Modifier.padding(start = 25.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            if ((i+1) < 10) "0${(i+1)}:00" else "${(i+1)}:00",
-                            modifier = Modifier.padding(end = 5.dp),
-                            style = TextStyle(
-                                fontSize = title.fontSize,
-                                fontWeight = title.fontWeight,
-                                fontFamily = title.fontFamily,
-                                color = corpColor
-                            )
+
+                    val newPading = (50 * myTime.hour + myTime.minute * 5 / 6)
+                    Box(Modifier.padding(top = newPading.dp)) {
+                        Box(
+                            Modifier.padding(top = 10.dp, end = 90.dp).fillMaxWidth()
+                                .height(3.dp)
+                                .background(color = if (transferDate.dateCompare(myTime)) Color.Red else Color.Gray)
                         )
                         Box(
-                            Modifier.fillMaxWidth().height(2.dp)
-                                .background(color = corpColor)
-                        )
-                    }
-                    if(myTime.hour==(i+1)){
-                        val newPading = ( myTime.minute*5/6)
-                        Box(Modifier.padding(top = newPading.dp)) {
-                            Box(
-                                Modifier.padding(top = 10.dp, end = 90.dp).fillMaxWidth().height(3.dp)
-                                    .background(color = if(transferDate.dateCompare(myTime)) Color.Red else Color.Gray)
-                            )
-                            Box(
-                                Modifier.padding(end = 25.dp).fillMaxWidth(),
-                                contentAlignment = Alignment.CenterEnd
-                            ) {
-                                Text(
-                                    if (myTime.hour < 10) "0${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}"
-                                    else "${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}",
-                                    modifier = Modifier.padding(end = 5.dp), style = TextStyle(
-                                        fontSize = title.fontSize,
-                                        fontWeight = title.fontWeight,
-                                        fontFamily = title.fontFamily,
-                                        color = if(transferDate.dateCompare(myTime)) Color.Red else Color.Gray
-                                    )
+                            Modifier.padding(end = 25.dp).fillMaxWidth(),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Text(
+                                if (myTime.hour < 10) "0${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}"
+                                else "${myTime.hour}:${if (myTime.minute < 10) "0${myTime.minute}" else myTime.minute}",
+                                modifier = Modifier.padding(end = 5.dp), style = TextStyle(
+                                    fontSize = title.fontSize,
+                                    fontWeight = title.fontWeight,
+                                    fontFamily = title.fontFamily,
+                                    color = if (transferDate.dateCompare(myTime)) Color.Red else Color.Gray
                                 )
-                            }
+                            )
                         }
                     }
-                }
 
+                }
             }
+
         }
 
 //        val newPading = (50*myTime.hour + myTime.minute*5/6)
@@ -237,3 +224,71 @@ fun hourColumn(listTask:List<List<TaskView>>,currentDay:Long,title: TextStyle,co
 
 
 }
+
+
+val testTaskList = listOf(
+    TaskView(
+        uid = 1,
+        name = "Morning Meeting",
+        start = DateAndTimeS(2025, 3, 27, 9, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 10, 0,0),
+        color = Color.Red,
+        time = "09:00 - 10:00"
+    ),
+    TaskView(
+        uid = 2,
+        name = "Project Planning",
+        start = DateAndTimeS(2025, 3, 27, 10, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 12, 0,0),
+        color = Color.Blue,
+        time = "10:00 - 12:00"
+    ),
+    TaskView(
+        uid = 3,
+        name = "Lunch Break",
+        start = DateAndTimeS(2025, 3, 27, 12, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 13, 0,0),
+        color = Color.Green,
+        time = "12:00 - 13:00"
+    ),
+    TaskView(
+        uid = 4,
+        name = "Team Workshop",
+        start = DateAndTimeS(2025, 3, 27, 13, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 15, 0,0),
+        color = Color.Yellow,
+        time = "13:00 - 15:00"
+    ),
+    TaskView(
+        uid = 5,
+        name = "Client Call",
+        start = DateAndTimeS(2025, 3, 27, 14, 30,0),
+        end = DateAndTimeS(2025, 3, 27, 16, 0,0),
+        color = Color.Cyan,
+        time = "14:30 - 16:00"
+    ),
+    TaskView(
+        uid = 6,
+        name = "Code Review",
+        start = DateAndTimeS(2025, 3, 27, 15, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 17, 0,0),
+        color = Color.Blue,
+        time = "15:00 - 17:00"
+    ),
+    TaskView(
+        uid = 7,
+        name = "Evening Meeting",
+        start = DateAndTimeS(2025, 3, 27, 18, 0,0),
+        end = DateAndTimeS(2025, 3, 27, 19, 0,0),
+        color = Color.Cyan,
+        time = "18:00 - 19:00"
+    ),
+    TaskView(
+        uid = 8,
+        name = "Project Deadline",
+        start = DateAndTimeS(2025, 3, 27, 19, 0,0),
+        end = DateAndTimeS(2025, 3, 28, 9, 0,0),
+        color = Color.Magenta,
+        time = "19:00 - 09:00 (next day)"
+    )
+)
