@@ -229,6 +229,16 @@ data class DateAndTimeS(
 
         return res
     }
+    fun dateCompare(date2:DateAndTimeS):Boolean{
+        if(year==date2.year) {
+            if (month == date2.month) {
+                if (day == date2.day) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 
     //=====================================================================================
     //Функция проверки весокосного года
@@ -314,6 +324,56 @@ data class DateAndTimeS(
         day=days
         hour=hours
         minute=minutes
+    }
+    //=====================================================================================
+    //Число текстом
+    //=====================================================================================
+    fun getTextDate():String{
+        return "${if(month>0&&month<13) calendar[month].name else ""} ${day} "
+    }
+    //=====================================================================================
+    //Прибавить день
+    //=====================================================================================
+    fun plusDay():DateAndTimeS{
+        if(isLeapYear(year)){
+            calendar[2].kolday = 29
+        }else{
+            calendar[2].kolday = 28
+        }
+        if(day == calendar[month].kolday){
+            if(month==12){
+                month=1
+                year++
+            }else{
+                month++
+            }
+            day=1
+        }else{
+            day++
+        }
+        return DateAndTimeS(year,month,day,hour,minute, second)
+    }
+    //=====================================================================================
+    //Убавить день
+    //=====================================================================================
+    fun devideDay():DateAndTimeS{
+        if(isLeapYear(year)){
+            calendar[2].kolday = 29
+        }else{
+            calendar[2].kolday = 28
+        }
+        if(day == 1){
+            if(month==1){
+                month=12
+                year--
+            }else{
+                month--
+            }
+            calendar[month].kolday
+        }else{
+            day--
+        }
+        return DateAndTimeS(year,month,day,hour,minute, second)
     }
 
 }
