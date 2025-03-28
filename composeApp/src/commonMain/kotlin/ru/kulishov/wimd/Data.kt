@@ -126,8 +126,6 @@ data class DateAndTimeS(
     var hour:Int,
     var minute:Int,
     var second:Int) {
-
-
     fun convertUnixTimeToDate1(unixTimeMillis: Long?) {
         val secondsInMinute = 60
         val secondsInHour = 3600
@@ -369,7 +367,9 @@ data class DateAndTimeS(
             }else{
                 month--
             }
-            calendar[month].kolday
+            if(isLeapYear(year)) calendar[2].kolday=29
+            else calendar[2].kolday=28
+            day = calendar[month].kolday
         }else{
             day--
         }
@@ -377,3 +377,39 @@ data class DateAndTimeS(
     }
 
 }
+
+    fun taskSupressions(task1:TaskView, task2:TaskView):Boolean{
+        var ret = false
+        if ((task1.start.dateTimeCompare(task2.start)==2||task1.start.dateTimeCompare(task2.start)==0)&&(task1.end.dateTimeCompare(task2.start)==1||task1.end.dateTimeCompare(task2.start)==0)||
+            (task1.start.dateTimeCompare(task2.end)==2||task1.start.dateTimeCompare(task2.end)==0)&&(task1.end.dateTimeCompare(task2.end)==1||task1.end.dateTimeCompare(task2.end)==0)||
+            (task1.start.dateTimeCompare(task2.start)==1||task1.start.dateTimeCompare(task2.start)==0)&&(task1.end.dateTimeCompare(task2.end)==2||task1.end.dateTimeCompare(task2.end)==0)){
+            ret=true
+
+        }
+
+        return ret
+    }
+    fun taskSortedTime(list: List<TaskView>): List<List<TaskView>>{
+        var ret: MutableList<MutableList<TaskView>> = mutableListOf()
+        for(i in list){
+            var taskFlag=false
+            for(y in ret){
+                var flag = true
+                for(z in y){
+                    if(taskSupressions(i,z)){
+                        flag=false
+                        break
+                    }
+                }
+                if(flag){
+                    y += i
+                    taskFlag=true
+                    break
+                }
+            }
+            if(!taskFlag){
+                ret+= mutableListOf(i)
+            }
+        }
+        return ret
+    }

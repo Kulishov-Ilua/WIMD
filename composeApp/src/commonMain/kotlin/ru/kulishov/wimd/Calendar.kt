@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -56,13 +59,31 @@ import wimd.composeapp.generated.resources.vector
 //              onTapTask:(Task)->Unit -
 //=====================================================================================
 @Composable
-fun calendarScreen(taskList:List<Task>, backgroundColor: Color, primaryColor:Color, title: TextStyle, body:TextStyle, onTapTask:(Task)->Unit){
+fun calendarScreen(taskList:List<Task>, backgroundColor: Color, primaryColor:Color, title: TextStyle, body:TextStyle, onRedactDay:(Long)->Unit){
     var calendarState by remember { mutableStateOf(0) }
     var actualDay = remember { mutableStateOf(getSystemTime()) }
     var transferDate = DateAndTimeS(0,0,0,0,0,0)
     transferDate.convertUnixTimeToDate1(actualDay.value)
-    bottomIslandScreen(calendarState, listOf(150.dp,150.dp,500.dp),{state -> calendarState=state},{
-        hourColumn(emptyList(),actualDay.value,title,primaryColor)
+    var nTaskList by remember { mutableStateOf(listOf<TaskView>()) }
+    for(task in taskList){
+        var dateTimeStart = DateAndTimeS(0,0,0,0,0,0)
+        dateTimeStart.convertUnixTimeToDate1(task.start)
+        var dateTimeEnd = DateAndTimeS(0,0,0,0,0,0)
+        dateTimeEnd.convertUnixTimeToDate1(task.endTime)
+        var timet = DateAndTimeS(0,0,0,0,0,0)
+        timet.calculateDifference(dateTimeStart,dateTimeEnd)
+        var tstring=""
+        if (timet.day>0) tstring+=timet.day.toString() + "д."
+        tstring+= timet.hour.toString() + "ч."
+        if(timet.day==0) tstring+= timet.minute.toString() + "м."
+        nTaskList+=TaskView(
+            task.uid!!, task.name!!, dateTimeStart, dateTimeEnd,
+            parseColor(listGroup.value[task.groupID].color), tstring
+        )
+    }
+
+    bottomIslandScreen(calendarState, listOf(150.dp),{state -> },{
+        hourColumn(taskSortedTime(nTaskList),actualDay.value,title,primaryColor)
     },{when(calendarState) {
         0,1 -> {
             dateCalendarblock(actualDay.value,{},backgroundColor,primaryColor,title,{type->
@@ -107,10 +128,10 @@ fun dateCalendarblock(date:Long,onRedact:(DateAndTimeS) -> Unit,backgroundColor:
 //            }
         , contentAlignment = Alignment.Center){
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
-                modifier = Modifier.rotate(90f).clickable {
-                    update(-1)
-                }, tint = backgroundColor)
+//            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
+//                modifier = Modifier.rotate(90f).clickable {
+//                    update(-1)
+//                }, tint = backgroundColor)
             Text(transferDate.getTextDate(), style = TextStyle(
                 fontSize = 36.sp,
                 fontStyle = title.fontStyle,
@@ -119,10 +140,10 @@ fun dateCalendarblock(date:Long,onRedact:(DateAndTimeS) -> Unit,backgroundColor:
                 color = backgroundColor
             ), modifier = Modifier.padding(start = 10.dp, end = 10.dp)
             )
-            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
-                modifier = Modifier.rotate(270f).clickable {
-                    update(1)
-                }, tint = backgroundColor)
+//            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
+//                modifier = Modifier.rotate(270f).clickable {
+//                    update(1)
+//                }, tint = backgroundColor)
         }
 
     }
@@ -142,7 +163,7 @@ fun hourColumn(listTask:List<List<TaskView>>,currentDay:Long,title: TextStyle,co
     val myTime = DateAndTimeS(0,0,0,0,0,0)
     myTime.convertUnixTimeToDate1(getSystemTime())
     myTime.hour+=3
-
+    //println(taskSortedTime(testTaskList))
     var transferDate = DateAndTimeS(0,0,0,0,0,0)
     transferDate.convertUnixTimeToDate1(currentDay)
     println(currentDay)
@@ -211,10 +232,44 @@ fun hourColumn(listTask:List<List<TaskView>>,currentDay:Long,title: TextStyle,co
                             )
                         }
                     }
+                    LazyRow(Modifier.padding(start = 85.dp)) {
+                        items(listTask){
+                                item->
+                            //println(item)
+                            Box {
+                                for (x in item) {
+                                    val startPad =
+                                        if (x.start.day == transferDate.day) x.start.hour else 0
+                                    var startHeight =
+                                        if (x.start.day == transferDate.day) x.start.hour else 0
+                                    if (x.start.minute > x.end.minute) {
+                                        startHeight += 1
+                                    }
+                                    val boxHeight =
+                                        50 * (x.end.hour - startHeight) + if (x.start.minute > x.end.minute) (x.end.minute - x.start.minute + 60) * 5 / 6 else (x.end.minute - x.start.minute) * 5 / 6
+                                    val itemPading = (50 * startPad + x.start.minute * 5 / 6)+10
+                                    println(itemPading)
+                                    Box(
+                                        modifier = Modifier.padding(top = itemPading.dp)
+                                            .width(200.dp).height(boxHeight.dp)
+                                            .background(x.color, shape = RoundedCornerShape(10))
+                                    ) {
+                                        Column {
+                                            Text(x.name)
+                                            Text(x.time)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                 }
-            }
 
+
+
+
+            }
         }
 
 //        val newPading = (50*myTime.hour + myTime.minute*5/6)

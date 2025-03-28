@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import android.icu.util.Calendar
 
 //##################################################################################################
 //##################################################################################################
@@ -134,9 +135,13 @@ fun NavHostContainer(
                         }
 
             composable("calendar") {
-                calendarScreen(emptyList(),androidx.compose.material3.MaterialTheme.colorScheme.background
+                calendarScreen(listTask,androidx.compose.material3.MaterialTheme.colorScheme.background
                     ,androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.typography.titleMedium, androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                    {})
+                    {
+                        time->
+                        //selectedDate=time
+
+                    })
             }
 
             /*composable("counter") {                emptyScreen()            }*/
