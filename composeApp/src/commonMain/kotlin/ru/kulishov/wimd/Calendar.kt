@@ -64,8 +64,11 @@ fun calendarScreen(taskList:List<Task>, backgroundColor: Color, primaryColor:Col
     var actualDay = remember { mutableStateOf(getSystemTime()) }
     var transferDate = DateAndTimeS(0,0,0,0,0,0)
     transferDate.convertUnixTimeToDate1(actualDay.value)
+
+    var curT by remember { mutableStateOf(getCurrentTask(taskList,actualDay.value)) }
     var nTaskList by remember { mutableStateOf(listOf<TaskView>()) }
-    for(task in taskList){
+
+    for(task in curT){
         var dateTimeStart = DateAndTimeS(0,0,0,0,0,0)
         dateTimeStart.convertUnixTimeToDate1(task.start)
         var dateTimeEnd = DateAndTimeS(0,0,0,0,0,0)
@@ -90,10 +93,16 @@ fun calendarScreen(taskList:List<Task>, backgroundColor: Color, primaryColor:Col
                 if(type==-1){
                     transferDate.devideDay()
                     actualDay.value=transferDate.convertToSeconds(transferDate)*1000
+                    nTaskList= emptyList()
+                    curT= emptyList()
+                    curT=getCurrentTask(taskList,actualDay.value)
                 }
                 if(type==1){
                     transferDate.plusDay()
                     actualDay.value=transferDate.convertToSeconds(transferDate)*1000
+                    nTaskList= emptyList()
+                    curT= emptyList()
+                    curT = getCurrentTask(taskList,actualDay.value)
                 }
             })
         }
@@ -128,10 +137,10 @@ fun dateCalendarblock(date:Long,onRedact:(DateAndTimeS) -> Unit,backgroundColor:
 //            }
         , contentAlignment = Alignment.Center){
         Row(verticalAlignment = Alignment.CenterVertically) {
-//            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
-//                modifier = Modifier.rotate(90f).clickable {
-//                    update(-1)
-//                }, tint = backgroundColor)
+            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
+                modifier = Modifier.rotate(90f).clickable {
+                    update(-1)
+                }, tint = backgroundColor)
             Text(transferDate.getTextDate(), style = TextStyle(
                 fontSize = 36.sp,
                 fontStyle = title.fontStyle,
@@ -140,10 +149,10 @@ fun dateCalendarblock(date:Long,onRedact:(DateAndTimeS) -> Unit,backgroundColor:
                 color = backgroundColor
             ), modifier = Modifier.padding(start = 10.dp, end = 10.dp)
             )
-//            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
-//                modifier = Modifier.rotate(270f).clickable {
-//                    update(1)
-//                }, tint = backgroundColor)
+            Icon(painter = painterResource(Res.drawable.vector), contentDescription = "",
+                modifier = Modifier.rotate(270f).clickable {
+                    update(1)
+                }, tint = backgroundColor)
         }
 
     }

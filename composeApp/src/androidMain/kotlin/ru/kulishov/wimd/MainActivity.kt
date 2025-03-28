@@ -90,6 +90,12 @@ class MainActivity : ComponentActivity() {
                         listTask.value+=Task(it.uid,it.name,it.start, it.endTime, it.groupID)
                     }
                 }
+                var bigtask =db.trackerDao().getAllTask().asLiveData().observe(this){
+                    listBigTask.value= emptyList()
+                    it.forEach{
+                        listBigTask.value+=Task(it.uid,it.name,it.start, it.endTime, it.groupID)
+                    }
+                }
 
                 //------------------------------------------------------
                 //Обновление данных бд

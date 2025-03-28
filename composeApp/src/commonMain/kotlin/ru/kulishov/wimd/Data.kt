@@ -67,6 +67,7 @@ var listGroup = mutableStateOf (
 )
 
 var listTask = mutableStateOf(emptyList<Task>())
+var listBigTask = mutableStateOf(emptyList<Task>())
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -413,3 +414,19 @@ data class DateAndTimeS(
         }
         return ret
     }
+fun getCurrentTask(tasks:List<Task>, currentDay:Long):List<Task>{
+    var ret = mutableListOf<Task>()
+    var dateTr=DateAndTimeS(0,0,0,0,0,0)
+    dateTr.convertUnixTimeToDate1(currentDay)
+    for(task in tasks){
+        val dateTr2=DateAndTimeS(0,0,0,0,0,0)
+        dateTr2.convertUnixTimeToDate1(task.start)
+        val dateTr3=DateAndTimeS(0,0,0,0,0,0)
+        dateTr3.convertUnixTimeToDate1(task.endTime)
+        if(dateTr.year==dateTr2.year && dateTr.month==dateTr2.month && dateTr.day==dateTr2.day||
+            dateTr.year==dateTr3.year&&dateTr.month==dateTr3.month&&dateTr.day==dateTr3.day){
+            ret+=task
+        }
+    }
+    return ret
+}

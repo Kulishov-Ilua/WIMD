@@ -81,11 +81,11 @@ object Constants {
         ),
         /* BottomNavItem(
              label = "Счётчик",            icon = R.drawable.counter,            route = "counter"        ),*/
-        BottomNavItem(
+       /* BottomNavItem(
             label = "Статистика",
             icon = R.drawable.statistic,
             route = "statistic"
-        )
+        )*/
     )
 }
 
@@ -135,7 +135,8 @@ fun NavHostContainer(
                         }
 
             composable("calendar") {
-                calendarScreen(listTask,androidx.compose.material3.MaterialTheme.colorScheme.background
+                calendarScreen(
+                    listBigTask.value,androidx.compose.material3.MaterialTheme.colorScheme.background
                     ,androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.typography.titleMedium, androidx.compose.material3.MaterialTheme.typography.bodyMedium,
                     {
                         time->
