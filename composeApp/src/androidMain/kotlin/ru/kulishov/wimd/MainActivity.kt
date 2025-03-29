@@ -44,6 +44,8 @@ import kotlinx.coroutines.launch
 
 import kotlin.coroutines.EmptyCoroutineContext
 
+
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +90,7 @@ class MainActivity : ComponentActivity() {
                         listTask.value+=Task(it.uid,it.name,it.start, it.endTime, it.groupID)
                     }
                 }
+
                 //------------------------------------------------------
                 //Обновление данных бд
                 //      0 - ожидание

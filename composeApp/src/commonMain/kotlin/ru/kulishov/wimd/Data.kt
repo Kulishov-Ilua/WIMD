@@ -126,8 +126,6 @@ data class DateAndTimeS(
     var hour:Int,
     var minute:Int,
     var second:Int) {
-
-
     fun convertUnixTimeToDate1(unixTimeMillis: Long?) {
         val secondsInMinute = 60
         val secondsInHour = 3600
@@ -229,6 +227,16 @@ data class DateAndTimeS(
 
         return res
     }
+    fun dateCompare(date2:DateAndTimeS):Boolean{
+        if(year==date2.year) {
+            if (month == date2.month) {
+                if (day == date2.day) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 
     //=====================================================================================
     //Функция проверки весокосного года
@@ -315,5 +323,93 @@ data class DateAndTimeS(
         hour=hours
         minute=minutes
     }
+    //=====================================================================================
+    //Число текстом
+    //=====================================================================================
+    fun getTextDate():String{
+        return "${if(month>0&&month<13) calendar[month].name else ""} ${day} "
+    }
+    //=====================================================================================
+    //Прибавить день
+    //=====================================================================================
+    fun plusDay():DateAndTimeS{
+        if(isLeapYear(year)){
+            calendar[2].kolday = 29
+        }else{
+            calendar[2].kolday = 28
+        }
+        if(day == calendar[month].kolday){
+            if(month==12){
+                month=1
+                year++
+            }else{
+                month++
+            }
+            day=1
+        }else{
+            day++
+        }
+        return DateAndTimeS(year,month,day,hour,minute, second)
+    }
+    //=====================================================================================
+    //Убавить день
+    //=====================================================================================
+    fun devideDay():DateAndTimeS{
+        if(isLeapYear(year)){
+            calendar[2].kolday = 29
+        }else{
+            calendar[2].kolday = 28
+        }
+        if(day == 1){
+            if(month==1){
+                month=12
+                year--
+            }else{
+                month--
+            }
+            if(isLeapYear(year)) calendar[2].kolday=29
+            else calendar[2].kolday=28
+            day = calendar[month].kolday
+        }else{
+            day--
+        }
+        return DateAndTimeS(year,month,day,hour,minute, second)
+    }
 
 }
+
+    fun taskSupressions(task1:TaskView, task2:TaskView):Boolean{
+        var ret = false
+        if ((task1.start.dateTimeCompare(task2.start)==2||task1.start.dateTimeCompare(task2.start)==0)&&(task1.end.dateTimeCompare(task2.start)==1||task1.end.dateTimeCompare(task2.start)==0)||
+            (task1.start.dateTimeCompare(task2.end)==2||task1.start.dateTimeCompare(task2.end)==0)&&(task1.end.dateTimeCompare(task2.end)==1||task1.end.dateTimeCompare(task2.end)==0)||
+            (task1.start.dateTimeCompare(task2.start)==1||task1.start.dateTimeCompare(task2.start)==0)&&(task1.end.dateTimeCompare(task2.end)==2||task1.end.dateTimeCompare(task2.end)==0)){
+            ret=true
+
+        }
+
+        return ret
+    }
+    fun taskSortedTime(list: List<TaskView>): List<List<TaskView>>{
+        var ret: MutableList<MutableList<TaskView>> = mutableListOf()
+        for(i in list){
+            var taskFlag=false
+            for(y in ret){
+                var flag = true
+                for(z in y){
+                    if(taskSupressions(i,z)){
+                        flag=false
+                        break
+                    }
+                }
+                if(flag){
+                    y += i
+                    taskFlag=true
+                    break
+                }
+            }
+            if(!taskFlag){
+                ret+= mutableListOf(i)
+            }
+        }
+        return ret
+    }

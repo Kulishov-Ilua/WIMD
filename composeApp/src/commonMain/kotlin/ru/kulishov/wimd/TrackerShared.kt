@@ -93,7 +93,7 @@ fun TrackerScreen(listTask:List<Task>, listGroupTask: List<GroupTask>, redactTas
     var taskTransfer by remember { mutableStateOf(Task(null,"",0L,0L, -1)) }
     var groupTransfer by remember { mutableStateOf(GroupTask(null,"","")) }
 
-    bottomIslandScreen(stateTrackerApp,{di-> stateTrackerApp=di},{
+    bottomIslandScreen(stateTrackerApp, listOf(200.dp,125.dp,350.dp,500.dp,310.dp,480.dp,625.dp),{ di-> stateTrackerApp=di},{
         Box(Modifier.fillMaxSize().background(color = backgroundColor)
             , contentAlignment = Alignment.TopCenter){
             Box(Modifier.padding(top=25.dp)){
