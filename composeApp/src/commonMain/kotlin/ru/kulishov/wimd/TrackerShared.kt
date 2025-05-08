@@ -577,7 +577,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                                             .padding(start = 25.dp, end = 25.dp)
                                             .height(48.dp)
                                             , verticalAlignment = Alignment.CenterVertically){
-                                            (if(newGroup<0) "Группа" else listGroup.value[newGroup].name)?.let {
+                                            (if(newGroup<0) "Группа" else listGroup.value[newGroup-1].name)?.let {
                                                 Text(text = it, style = textfieldTextStyle)
                                             }
 
@@ -589,7 +589,7 @@ fun createTaskBlock(task:Task,onSave: (Task) -> Unit, onBack:(Task) -> Unit,prim
                                                         .height(25.dp)
                                                         .background(
                                                             if (newGroup >= 0) parseColor(
-                                                                listGroup.value[newGroup].color
+                                                                listGroup.value[newGroup-1].color
                                                             ) else backgroundColor,
                                                             shape = RoundedCornerShape(4)
                                                         ), contentAlignment = Alignment.Center
@@ -1152,7 +1152,7 @@ fun taskGroupScreen(listTask:List<Task>, listGroupTask: List<GroupTask>,onTapGro
                                    taskCardTracker(
                                        TaskView(
                                            task.uid!!, task.name!!, dateTimeStart, dateTimeEnd,
-                                           parseColor(listGroup.value[task.groupID].color), tstring
+                                           parseColor(listGroup.value[task.groupID-1].color), tstring
                                        ), titleStyle, bodyStyle, primaryColor
                                    )
                                }

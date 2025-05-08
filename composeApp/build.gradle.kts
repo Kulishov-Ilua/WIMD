@@ -25,16 +25,19 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "composeApp"
             isStatic = true
         }
     }
-    
+
+
     sourceSets {
         
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -49,6 +52,7 @@ kotlin {
             implementation(libs.sqlite.bundled)
             implementation(libs.sqlite)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
 
         }
     }
@@ -87,6 +91,8 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.navigation.runtime.ktx)
+    implementation(libs.navigation.compose)
     debugImplementation(compose.uiTooling)
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)

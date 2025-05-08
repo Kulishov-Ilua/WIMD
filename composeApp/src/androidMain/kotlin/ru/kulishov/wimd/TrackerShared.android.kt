@@ -100,14 +100,16 @@ fun inputTime(
     onDismiss: () -> Unit,
 ) {
 
-    val currentTime = Calendar.getInstance(TimeZone.GMT_ZONE)
+    val timeZone = TimeZone.getDefault()
+    val currentTime = Calendar.getInstance(timeZone)
+
 
     val timePickerState = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
         is24Hour = true,
     )
-    timePickerState.hour+=3
+    //timePickerState.hour+=3
     Box(modifier = Modifier
         .padding(top = 25.dp)
         .width(300.dp)
@@ -149,7 +151,7 @@ fun inputTime(
                         .height(50.dp)
                         .clip(shape = RoundedCornerShape(4))
                         .clickable {
-                            onDismiss
+                            onDismiss()
                         }
                         .background(
                             MaterialTheme.colorScheme.primary,

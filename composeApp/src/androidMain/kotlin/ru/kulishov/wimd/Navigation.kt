@@ -63,94 +63,94 @@ import android.icu.util.Calendar
 //              icon:Int - icon
 //              route:String - route
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-data class BottomNavItem(val label:String,val icon:Int,val route:String)
-
-//#####################################################################################
-//объекты навигации                                                        ############
-//#####################################################################################
-object Constants {
-    val BottomNavItems = listOf(
-        BottomNavItem(
-            label = "Трекер",
-            icon = R.drawable.home,
-            route = "tracker"        ),
-        BottomNavItem(
-            label = "Календарь",
-            icon = R.drawable.calendar,
-            route = "calendar"
-        ),
-        /* BottomNavItem(
-             label = "Счётчик",            icon = R.drawable.counter,            route = "counter"        ),*/
-        BottomNavItem(
-            label = "Статистика",
-            icon = R.drawable.statistic,
-            route = "statistic"
-        )
-    )
-}
+//data class BottomNavItem(val label:String,val icon:Int,val route:String)
+//
+////#####################################################################################
+////объекты навигации                                                        ############
+////#####################################################################################
+//object Constants {
+//    val BottomNavItems = listOf(
+//        BottomNavItem(
+//            label = "Трекер",
+//            icon = R.drawable.home,
+//            route = "tracker"        ),
+//        BottomNavItem(
+//            label = "Календарь",
+//            icon = R.drawable.calendar,
+//            route = "calendar"
+//        ),
+//        /* BottomNavItem(
+//             label = "Счётчик",            icon = R.drawable.counter,            route = "counter"        ),*/
+//        BottomNavItem(
+//            label = "Статистика",
+//            icon = R.drawable.statistic,
+//            route = "statistic"
+//        )
+//    )
+//}
 
 //=====================================================================================
 //BottomBar реализация
 //=====================================================================================
-@Composable
-fun BottomNavigationBar(navController: NavController) {
-    BottomNavigation(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background) {
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-        Constants.BottomNavItems.forEach { navItem ->
-            BottomNavigationItem(
-                selected = currentRoute == navItem.route,
-                onClick = {
-                    navController.navigate(navItem.route)
-                          },
-                {
-                    Image(painter = painterResource(navItem.icon), contentDescription = navItem.label,
-                        modifier = Modifier.scale(if(currentRoute == navItem.route) 0.9F else 0.7F))
-                },
-
-                )
-        }
-    }
-}
-
-@Composable
-fun NavHostContainer(
-    navController: NavHostController, padding: PaddingValues,
-    listTask:List<Task>, listGroupTask: List<GroupTask>,redactTask: (Boolean,Task) -> Unit, redactGroup: (Boolean, GroupTask) -> Unit
-) {
-    NavHost(
-        navController = navController,
-        startDestination = "tracker",
-        modifier = Modifier.padding(paddingValues = padding),
-        builder = {
-            composable("tracker") {
-                TrackerScreen(listTask,listGroupTask,{
-                    type, task ->
-                    redactTask(type,task)
-                }, {
-                        type, group ->
-                    redactGroup(type,group)
-                }, androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    androidx.compose.material3.MaterialTheme.typography.titleMedium,androidx.compose.material3.MaterialTheme.typography.bodyMedium,androidx.compose.material3.MaterialTheme.typography.titleLarge)
-                        }
-
-            composable("calendar") {
-                calendarScreen(listTask,androidx.compose.material3.MaterialTheme.colorScheme.background
-                    ,androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.typography.titleMedium, androidx.compose.material3.MaterialTheme.typography.bodyMedium,
-                    {
-                        time->
-                        //selectedDate=time
-
-                    })
-            }
-
-            /*composable("counter") {                emptyScreen()            }*/
-            composable("statistic") {
-
-            }
-        }
-    )
-}
+//@Composable
+//fun BottomNavigationBar(navController: NavController) {
+//    BottomNavigation(backgroundColor = androidx.compose.material3.MaterialTheme.colorScheme.background) {
+//        val navBackStackEntry by navController.currentBackStackEntryAsState()
+//        val currentRoute = navBackStackEntry?.destination?.route
+//        Constants.BottomNavItems.forEach { navItem ->
+//            BottomNavigationItem(
+//                selected = currentRoute == navItem.route,
+//                onClick = {
+//                    navController.navigate(navItem.route)
+//                          },
+//                {
+//                    Image(painter = painterResource(navItem.icon), contentDescription = navItem.label,
+//                        modifier = Modifier.scale(if(currentRoute == navItem.route) 0.9F else 0.7F))
+//                },
+//
+//                )
+//        }
+//    }
+//}
+//
+//@Composable
+//fun NavHostContainer(
+//    navController: NavHostController, padding: PaddingValues,
+//    listTask:List<Task>, listGroupTask: List<GroupTask>,redactTask: (Boolean,Task) -> Unit, redactGroup: (Boolean, GroupTask) -> Unit
+//) {
+//    NavHost(
+//        navController = navController,
+//        startDestination = "tracker",
+//        modifier = Modifier.padding(paddingValues = padding),
+//        builder = {
+//            composable("tracker") {
+//                TrackerScreen(listTask,listGroupTask,{
+//                    type, task ->
+//                    redactTask(type,task)
+//                }, {
+//                        type, group ->
+//                    redactGroup(type,group)
+//                }, androidx.compose.material3.MaterialTheme.colorScheme.background,androidx.compose.material3.MaterialTheme.colorScheme.primary,
+//                    androidx.compose.material3.MaterialTheme.typography.titleMedium,androidx.compose.material3.MaterialTheme.typography.bodyMedium,androidx.compose.material3.MaterialTheme.typography.titleLarge)
+//                        }
+//
+//            composable("calendar") {
+//                calendarScreen(listTask,androidx.compose.material3.MaterialTheme.colorScheme.background
+//                    ,androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.typography.titleMedium, androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+//                    {
+//                        time->
+//                        //selectedDate=time
+//
+//                    })
+//            }
+//
+//            /*composable("counter") {                emptyScreen()            }*/
+//            composable("statistic") {
+//
+//            }
+//        }
+//    )
+//}
 
 
 
@@ -161,33 +161,33 @@ fun NavHostContainer(
 //              onButState:() -> Unit
 //              label:String -  element label
 //=====================================================================================
-@Composable
-fun NavSingleButtom(startState:Boolean, onButState:(Boolean) -> Unit,label:String){
-    //var navButState by remember { mutableStateOf(startState) }
-    val theme = androidx.compose.material3.MaterialTheme.colorScheme.primary
-    var animateBackground = animateColorAsState(
-        targetValue = if(startState) theme else androidx.compose.ui.graphics.Color.Gray
-    )
-    var animatelabel = animateColorAsState(
-        targetValue = if(!startState) theme else androidx.compose.material3.MaterialTheme.colorScheme.background
-    )
-    Button(
-        onClick = {
-            onButState(true)
-        },
-        //shape = RoundedCornerShape(10),
-        Modifier.width(120.dp),
-        colors = ButtonColors(containerColor = animateBackground.value,
-            contentColor = animatelabel.value, disabledContentColor = animatelabel.value,
-            disabledContainerColor = animateBackground.value)
-    ) {
-        Text(label, style = TextStyle(
-            fontSize = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontSize,
-            fontWeight = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontWeight,
-            color = animatelabel.value
-        )
-        )
-    }
-
-}
-
+//@Composable
+//fun NavSingleButtom(startState:Boolean, onButState:(Boolean) -> Unit,label:String){
+//    //var navButState by remember { mutableStateOf(startState) }
+//    val theme = androidx.compose.material3.MaterialTheme.colorScheme.primary
+//    var animateBackground = animateColorAsState(
+//        targetValue = if(startState) theme else androidx.compose.ui.graphics.Color.Gray
+//    )
+//    var animatelabel = animateColorAsState(
+//        targetValue = if(!startState) theme else androidx.compose.material3.MaterialTheme.colorScheme.background
+//    )
+//    Button(
+//        onClick = {
+//            onButState(true)
+//        },
+//        //shape = RoundedCornerShape(10),
+//        Modifier.width(120.dp),
+//        colors = ButtonColors(containerColor = animateBackground.value,
+//            contentColor = animatelabel.value, disabledContentColor = animatelabel.value,
+//            disabledContainerColor = animateBackground.value)
+//    ) {
+//        Text(label, style = TextStyle(
+//            fontSize = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontSize,
+//            fontWeight = androidx.compose.material3.MaterialTheme.typography.titleSmall.fontWeight,
+//            color = animatelabel.value
+//        )
+//        )
+//    }
+//
+//}
+//

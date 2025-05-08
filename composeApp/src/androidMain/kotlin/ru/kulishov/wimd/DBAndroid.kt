@@ -5,51 +5,27 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-//#####################################################################################################################
-//###############################                База данных приложения                 ###############################
-//#####################################################################################################################
-@Database(
-    entities = [
-        GroupTask::class,
-        Task::class,
-        Counter::class
-    ],
-    version = 1,
-)
-abstract class TrackerDatabase: RoomDatabase(){
-    abstract fun trackerDao():DaoTracker
-    abstract fun counterDao():DaoCounter
-    abstract fun groupDao(): DaoGroup
+ fun getDatabaseBuilder(ctx: Context): RoomDatabase.Builder<AppDatabase> {
+    val appContext = ctx.applicationContext
+    val dbFile = appContext.getDatabasePath("my_room.db")
+    return Room.databaseBuilder<AppDatabase>(
+        context = appContext,
+        name = dbFile.absolutePath
+    )
+}
 
-    companion object {
-        @Volatile
-        private var INSTANCE: TrackerDatabase? = null
-
-        fun getInstance(context: Context): TrackerDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    TrackerDatabase::class.java,
-                    "WIMD"
-                )
-                    .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            // Выполняем заполнение данных в фоновом потоке
-                            Thread {
-                                getInstance(context).groupDao().insertGroup(
-                                    GroupTask(0,"Личное", "169,82,170")
-                                )
-                            }.start()
-                        }
-                    })
-                    .build()
-
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
-
+ fun getRoomDatabase(
+    builder: RoomDatabase.Builder<AppDatabase>
+): AppDatabase {
+    return builder
+        //.addMigrations(MIGRATIONS)
+        .fallbackToDestructiveMigrationOnDowngrade()
+        .setDriver(BundledSQLiteDriver())
+        .setQueryCoroutineContext(Dispatchers.IO)
+        .build()
 }

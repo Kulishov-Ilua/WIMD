@@ -1,12 +1,16 @@
 package ru.kulishov.wimd
 
 import androidx.room.ColumnInfo
+import androidx.room.ConstructedBy
 import androidx.room.Dao
+import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.RoomDatabase
+import androidx.room.RoomDatabaseConstructor
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -83,15 +87,15 @@ data class Counter(
 @Dao
 interface DaoTracker{
     @Insert
-    fun insertTask(task: Task)
+    suspend fun insertTask(task: Task)
     @Query("SELECT * FROM Task")
-    fun getAllTask(): Flow<List<Task>>
+     fun getAllTask(): Flow<List<Task>>
     @Query("SELECT * FROM Task WHERE (start < :dayEnd AND endTime >= :dayStart)")
-    fun getDayTask(dayStart: Long, dayEnd: Long): Flow<List<Task>>
+     fun getDayTask(dayStart: Long, dayEnd: Long): Flow<List<Task>>
     @Delete
-    fun deleteTask(task: Task)
+    suspend  fun deleteTask(task: Task)
     @Update
-    fun updateTask(vararg task: Task)
+    suspend  fun updateTask(vararg task: Task)
 
 }
 //------------------------------------------------------------------------------
@@ -106,13 +110,13 @@ interface DaoTracker{
 interface DaoCounter{
 
     @Insert
-    fun insertCounter(counter: Counter)
+    suspend  fun insertCounter(counter: Counter)
     @Query("SELECT * FROM Counter")
-    fun getAllCounter():List<Counter>
+    suspend fun getAllCounter():List<Counter>
     @Delete
-    fun deleteCounter(counter: Counter)
+    suspend fun deleteCounter(counter: Counter)
     @Update
-    fun updateCounter(vararg counter: Counter)
+    suspend fun updateCounter(vararg counter: Counter)
 }
 
 //------------------------------------------------------------------------------
@@ -126,11 +130,31 @@ interface DaoCounter{
 @Dao
 interface DaoGroup{
     @Update
-    fun updateGroup(vararg group: GroupTask)
+    suspend fun updateGroup(vararg group: GroupTask)
     @Delete
-    fun deleteGroup(group: GroupTask)
+    suspend fun deleteGroup(group: GroupTask)
     @Query("SELECT * FROM GroupTask ")
-    fun getAllGroup(): Flow<List<GroupTask>>
+     fun getAllGroup(): Flow<List<GroupTask>>
     @Insert
-    fun insertGroup(group: GroupTask)
+    suspend fun insertGroup(group: GroupTask)
+}
+
+//#####################################################################################################################
+//###############################                База данных приложения                 ###############################
+//#####################################################################################################################
+
+@Database(entities = [GroupTask::class, Task::class, Counter::class], version = 1)
+@ConstructedBy(AppDatabaseConstructor::class)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun groupDao(): DaoGroup
+    abstract fun trackerDao(): DaoTracker
+    abstract fun counterDao(): DaoCounter
+
+
+}
+
+// The Room compiler generates the `actual` implementations.
+@Suppress("NO_ACTUAL_FOR_EXPECT")
+expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
+    override fun initialize(): AppDatabase
 }
